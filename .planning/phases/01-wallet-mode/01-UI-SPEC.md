@@ -1,7 +1,8 @@
 ---
 phase: 1
 slug: wallet-mode
-status: draft
+status: approved
+reviewed_at: 2026-08-19
 shadcn_initialized: false
 preset: "style=new-york, baseColor=neutral, cssVariables=true, iconLibrary=lucide-react (recommended, not yet run — repo has no Next.js scaffold yet; executor runs `npx shadcn init` during Phase 1 setup, right after `create-next-app`)"
 created: 2026-08-19
@@ -43,6 +44,7 @@ Declared values (must be multiples of 4):
 
 Exceptions:
 - Tab bar and icon-only buttons (back, disconnect, chain switch icon) use a 44px minimum touch target regardless of visual icon size, per mobile tap-target accessibility. Pad with `xs`/`sm` inside a 44px hit area, do not shrink the tap target below it.
+- Icon-only actions (back, disconnect, chain switch) declaran `aria-label` en español y tooltip como fallback de label accesible.
 
 ---
 
@@ -61,6 +63,7 @@ Notes:
 - Heading (20px/600) is for screen titles and section headers (e.g. "Tus redes", "Actividad reciente").
 - Label (14px/400) is for meta text: chain names next to balances, timestamps, helper text under inputs.
 - Numeric balances use tabular figures (`font-variant-numeric: tabular-nums`) so per-chain amounts align in the breakdown list.
+- Focal point: en Home, la cifra del balance total en Display es el ancla visual primaria; la card de posición en la bóveda es secundaria.
 
 ---
 
@@ -91,7 +94,7 @@ Language: Spanish, rioplatense, neutral tone. No em/en dashes as separators, no 
 |---------|------|
 | Primary CTA — Enviar | "Enviar ARGt" |
 | Primary CTA — Vault deposit | "Depositar en la bóveda" |
-| Primary CTA — Vault withdraw (partial) | "Retirar" |
+| Primary CTA — Vault withdraw (partial) | "Retirar parcial" |
 | Primary CTA — Vault withdraw (full) | "Retirar todo" |
 | Primary CTA — Bridge | "Bridgear ARGt" |
 | Empty state heading — Actividad | "Todavía no hay movimientos" |
@@ -122,11 +125,11 @@ No third-party registries declared for this phase. Registry vetting gate not tri
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS (FLAG resuelto: "Retirar parcial")
+- [x] Dimension 2 Visuals: PASS (FLAGs resueltos: focal point explícito, aria-label en icon-only)
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS
+- [x] Dimension 5 Spacing: PASS
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** approved (gsd-ui-checker, 2026-08-19)
