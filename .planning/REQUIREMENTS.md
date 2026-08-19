@@ -67,4 +67,29 @@ Fuente: `SPEC.md` (raíz) + PROJECT.md. v1 = lo que se demuestra en la submissio
 
 ## Traceability
 
-(Filled by roadmap)
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| AUTH-01 | Phase 1 | Pending |
+| AUTH-02 | Phase 1 | Pending |
+| M1-01 | Phase 1 | Pending |
+| M1-02 | Phase 1 | Pending |
+| M1-03 | Phase 1 | Pending |
+| M2-01 | Phase 1 | Pending |
+| M2-02 | Phase 1 | Pending |
+| M3-01 | Phase 1 | Pending |
+| M3-02 | Phase 1 | Pending |
+| SOL-01 | Phase 2 | Pending |
+| SOL-02 | Phase 2 | Pending |
+| CTA-01 | Phase 3 | Pending |
+| CTA-02 | Phase 3 | Pending |
+| CTA-03 | Phase 3 | Pending |
+| CTA-04 | Phase 3 | Pending |
+| CTA-05 | Phase 3 | Pending |
+| CTA-06 | Phase 3 | Pending |
+| SOL-03 | Phase 4 | Pending |
+| SOL-04 | Phase 4 | Pending |
+| SOL-05 | Phase 4 | Pending |
+| SOL-06 | Phase 4 | Pending |
+| SHIP-01 | Phase 5 | Pending |
+| SHIP-02 | Phase 5 | Pending |
+| SHIP-03 | Phase 5 | Pending |
