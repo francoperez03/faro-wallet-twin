@@ -21,6 +21,13 @@ export default function CuentaPage() {
 
   const load = useCallback(async () => {
     const token = await getAccessToken();
+    // ponytail: D-08(a) gap del verifier de fase 3 — dispara el sweep de depósitos al
+    // entrar a Home por si el usuario cerró /cuenta/pasar antes de que termine su polling.
+    // Best-effort, no bloquea el render de la cuenta.
+    fetch("/api/cuenta/sync-deposits", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+    }).catch(() => {});
     const [accountRes, rateRes] = await Promise.all([
       fetch("/api/cuenta/account", { headers: { Authorization: `Bearer ${token}` } }),
       fetch("/api/cuenta/rate"),
