@@ -37,3 +37,14 @@ export const BRIDGE_ADAPTERS: Record<ChainKey, `0x${string}`> = {
   base: "0xe80Af1d12426dB4394b147e04f179a38e7C5Dfe7",
   polygon: "0xD70ad085684b2A9f4B5d54D7BDB2ecA37a273216",
 };
+
+// SobrecitoRegistry (Phase 2 SOL-01/SOL-02). Fallback = deployments.json (raíz del repo),
+// override por env NEXT_PUBLIC_REGISTRY_1_*. Phase 4 (04-03) agrega un segundo entry.
+export const REGISTRIES: { label: string; address: `0x${string}`; chainId: number }[] = [
+  {
+    label: process.env.NEXT_PUBLIC_REGISTRY_1_LABEL ?? "Fixture sintética",
+    address: (process.env.NEXT_PUBLIC_REGISTRY_1_ADDRESS ??
+      "0x89ec9bf3cd42a037a2d004813733fc0d6e2ab03d") as `0x${string}`,
+    chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_1_CHAIN_ID ?? 42161),
+  },
+];

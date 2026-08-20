@@ -1,0 +1,15 @@
+{
+  "registries": [
+    {
+      "label": "Fixture sintética",
+      "address": "0x89ec9bf3cd42a037a2d004813733fc0d6e2ab03d",
+      "verifierAddress": "0x9e2af6688b7ac79f506f0d61efb030843218d159",
+      "chainId": 42161,
+      "deployTx": "0xac1c638a7389c71d4ce46aa289c2efa74b0040c613fd6acc62d4dbc49a1d4805",
+      "keyHash": "0x0a3d8cb59f79a9cea1389fcd41eb5e5a65ea70f89be2ec030f6b2d35b5bd8f9c",
+      "explorer": "https://arbiscan.io/address/0x89ec9bf3cd42a037a2d004813733fc0d6e2ab03d",
+      "publishTx": "0xba83e39d39e0ec4d5657445358e5e0c56d5c0438ef601145551cdb1e8b6e8408",
+      "corteId": "0xdff809cfa2e350aa5e82057774920a140d993b09a3835c9e2690a6b92f82fe32"
+    }
+  ]
+}
