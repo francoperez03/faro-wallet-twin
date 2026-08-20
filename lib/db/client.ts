@@ -1,4 +1,4 @@
-import { neon, neonConfig, Pool, type PoolClient } from "@neondatabase/serverless";
+import { neon, neonConfig, Pool, type NeonQueryFunction, type PoolClient } from "@neondatabase/serverless";
 import ws from "ws";
 
 // Pool (WebSocket) necesita un ws constructor fuera de Cloudflare Workers/edge.
@@ -11,15 +11,15 @@ function getDatabaseUrl(): string {
 }
 
 // ponytail: getDb() lazy, nunca se conecta en module-eval (build time), solo en el primer query real.
-let _httpSql: ReturnType<typeof neon> | null = null;
-function getDb() {
+let _httpSql: NeonQueryFunction<false, false> | null = null;
+function getDb(): NeonQueryFunction<false, false> {
   if (!_httpSql) _httpSql = neon(getDatabaseUrl());
   return _httpSql;
 }
 
 /** Tagged template para queries sueltas de lectura (HTTP driver, sin transacción interactiva). */
-export const sql = ((strings: TemplateStringsArray, ...values: unknown[]) =>
-  getDb()(strings, ...values)) as ReturnType<typeof neon>;
+export const sql: NeonQueryFunction<false, false> = ((strings: TemplateStringsArray, ...values: unknown[]) =>
+  getDb()(strings, ...values)) as NeonQueryFunction<false, false>;
 
 /**
  * Sesión interactiva real (WebSocket): BEGIN -> fn(client) -> COMMIT, o ROLLBACK si fn tira.
