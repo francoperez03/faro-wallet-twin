@@ -12,13 +12,15 @@ import {
   type ChainKey,
   type TokenKey,
 } from "@/lib/config/tokens";
+import { SlidersHorizontal } from "lucide-react";
 import { useActivity } from "@/lib/hooks/use-activity";
+import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn, truncateAddress } from "@/lib/utils";
 
 const ALL = "all";
 const CHIP =
-  "min-h-9 rounded-md px-2.5 text-xs font-semibold transition-colors";
+  "min-h-8 rounded-md px-2 text-[11px] font-semibold transition-colors";
 const CHIP_ON = "bg-gold-dim text-gold";
 const CHIP_OFF = "text-muted-foreground hover:text-foreground";
 
@@ -44,6 +46,9 @@ export function ActivityCard({
   const [token, setToken] = useState<TokenKey | typeof ALL>(ALL);
   const [chain, setChain] = useState<ChainKey | typeof ALL>(ALL);
   const { data, isLoading } = useActivity(walletAddress);
+  const [showFilters, setShowFilters] = useState(false);
+  const filtersRef = useRevealAnimation<HTMLDivElement>(showFilters);
+  const filterCount = (token === ALL ? 0 : 1) + (chain === ALL ? 0 : 1);
 
   const entries = (data ?? []).filter(
     (e) =>
@@ -56,11 +61,32 @@ export function ActivityCard({
       aria-labelledby={titleId}
       className={cn("rounded-lg border border-border bg-card p-4", className)}
     >
-      <h2 id={titleId} className="text-sm text-muted-foreground">
-        Actividad
-      </h2>
+      <div className="flex items-center justify-between">
+        <h2 id={titleId} className="text-sm text-muted-foreground">
+          Actividad
+        </h2>
+        <button
+          type="button"
+          aria-expanded={showFilters}
+          aria-label="Filtros de actividad"
+          onClick={() => setShowFilters((v) => !v)}
+          className={cn(
+            "flex min-h-11 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors",
+            showFilters || filterCount > 0 ? "text-gold" : "text-muted-foreground hover:text-foreground"
+          )}
+        >
+          <SlidersHorizontal className="size-4" aria-hidden="true" />
+          Filtrar
+          {filterCount > 0 && (
+            <span className="rounded-[3px] bg-gold-dim px-1 font-mono text-[11px] text-gold">
+              {filterCount}
+            </span>
+          )}
+        </button>
+      </div>
 
-      <div className="mt-3 flex flex-wrap gap-2">
+      {showFilters && (
+      <div ref={filtersRef} className="mt-2 flex flex-wrap gap-2">
         <div
           role="tablist"
           aria-label="Moneda"
@@ -106,6 +132,7 @@ export function ActivityCard({
           ))}
         </div>
       </div>
+      )}
 
       <div className="mt-4 border-t border-border">
         {isLoading && (
