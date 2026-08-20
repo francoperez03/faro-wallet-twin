@@ -28,12 +28,21 @@ const TX_ERROR =
   "No pudimos completar la operación. Revisá tu conexión o el saldo disponible y volvé a intentar.";
 
 const STATUS_PILL: Partial<Record<BridgeStatus, { label: string; className: string }>> = {
-  cotizando: { label: "Cotizando fee...", className: "bg-zinc-100 text-zinc-900" },
-  confirmando: { label: "Confirmando...", className: "bg-zinc-100 text-zinc-900" },
-  en_transito: { label: "En tránsito", className: "bg-blue-600 text-white" },
-  completado: { label: "Completado", className: "bg-blue-600 text-white" },
-  timeout: { label: "Sin confirmar todavía", className: "bg-zinc-100 text-zinc-900" },
-  error: { label: "Error", className: "bg-red-600 text-white" },
+  cotizando: {
+    label: "Cotizando fee...",
+    className: "border border-border bg-card text-foreground",
+  },
+  confirmando: {
+    label: "Confirmando...",
+    className: "border border-border bg-card text-foreground",
+  },
+  en_transito: { label: "En tránsito", className: "bg-green-dim text-green" },
+  completado: { label: "Completado", className: "bg-green-dim text-green" },
+  timeout: {
+    label: "Sin confirmar todavía",
+    className: "border border-border bg-card text-foreground",
+  },
+  error: { label: "Error", className: "bg-destructive/10 text-destructive" },
 };
 
 export default function BridgePage() {
@@ -116,11 +125,16 @@ export default function BridgePage() {
   const destChains = CHAINS.filter((c) => c !== fromChain);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Mover entre redes</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / BRIDGE
+        </p>
+        <h1 className="font-serif text-3xl text-foreground">Mover entre redes</h1>
+      </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Desde</span>
+        <span className="text-sm text-muted-foreground">Desde</span>
         <div className="flex gap-2">
           {CHAINS.map((c) => (
             <button
@@ -136,22 +150,22 @@ export default function BridgePage() {
               className={cn(
                 "min-h-11 flex-1 rounded-md border text-sm",
                 fromChain === c
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-zinc-200 bg-white text-zinc-900"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground"
               )}
             >
               {CHAIN_LABELS[c]}
             </button>
           ))}
         </div>
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Disponible: <span className="tabular-nums">{formatUnits(balanceOnChain, decimals)}</span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Hacia</span>
+        <span className="text-sm text-muted-foreground">Hacia</span>
         <div className="flex gap-2">
           {destChains.map((c) => (
             <button
@@ -161,8 +175,8 @@ export default function BridgePage() {
               className={cn(
                 "min-h-11 flex-1 rounded-md border text-sm",
                 toChain === c
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-zinc-200 bg-white text-zinc-900"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground"
               )}
             >
               {CHAIN_LABELS[c]}
@@ -172,47 +186,52 @@ export default function BridgePage() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Monto</span>
+        <span className="text-sm text-muted-foreground">Monto</span>
         <Input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
           inputMode="decimal"
           placeholder="0.0"
         />
-        {amountError && <p className="text-sm text-red-600">{amountError}</p>}
+        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
       </div>
 
       {amountBigInt && !amountError && (
-        <div className="rounded-md bg-zinc-100 p-4 text-sm text-zinc-900">
+        <div className="rounded-md border border-border bg-card p-4 text-sm text-foreground">
           {fee !== null ? (
             <p>
               Fee de mensajería estimado:{" "}
               <span className="tabular-nums">{formatEther(fee)}</span> {NATIVE_SYMBOL[fromChain]}
             </p>
           ) : feeError ? (
-            <p className="text-red-600">{feeError}</p>
+            <p className="text-destructive">{feeError}</p>
           ) : (
-            <p className="text-zinc-500">Cotizando fee...</p>
+            <p className="text-muted-foreground">Cotizando fee...</p>
           )}
         </div>
       )}
 
-      <Button onClick={onSubmit} disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700">
+      <Button onClick={onSubmit} disabled={!canSubmit}>
         {isSubmitting ? "Bridgeando..." : "Bridgear ARGt"}
       </Button>
 
       {pill && (
-        <Badge className={cn("w-fit rounded-full px-3 py-1 text-sm", pill.className)}>
+        <Badge
+          className={cn(
+            "w-fit rounded-[3px] px-1.5 py-0.5 font-mono text-[11px]",
+            pill.className
+          )}
+        >
           {pill.label}
         </Badge>
       )}
       {status === "timeout" && (
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Todavía no vemos el balance actualizado en destino. Puede tardar unos minutos más;
           revisá el explorer de la red destino si querés confirmar el estado.
         </p>
       )}
-      {error && <p className="text-sm text-red-600">{TX_ERROR}</p>}
+      {error && <p className="text-sm text-destructive">{TX_ERROR}</p>}
     </div>
   );
 }

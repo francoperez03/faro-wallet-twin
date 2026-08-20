@@ -162,100 +162,105 @@ export default function RendimientoPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Rendimiento</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
+      <div className="flex flex-col gap-6">
+        <div>
+          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+            // FARO / RENDIMIENTO
+          </p>
+          <h1 className="font-serif text-3xl text-foreground">Rendimiento</h1>
+        </div>
 
-      <VaultCard />
-
-      <div className="flex flex-col gap-3 rounded-lg bg-zinc-100 p-4">
-        <p className="text-sm font-medium text-zinc-900">Depositar</p>
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="Monto en ARGt"
-          value={depositAmount}
-          onChange={(event) => setDepositAmount(event.target.value)}
-          disabled={isDepositing}
-        />
-        <Button
-          onClick={handleDeposit}
-          disabled={!address || isDepositing || !depositAmount}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          {isDepositing ? (depositStatus ?? "Depositando...") : "Depositar en la bóveda"}
-        </Button>
+        <VaultCard />
       </div>
 
-      <div className="flex flex-col gap-3 rounded-lg bg-zinc-100 p-4">
-        <p className="text-sm font-medium text-zinc-900">Retirar</p>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+          <p className="text-sm font-medium text-foreground">Depositar</p>
+          <Input
+            type="number"
+            inputMode="decimal"
+            placeholder="Monto en ARGt"
+            value={depositAmount}
+            onChange={(event) => setDepositAmount(event.target.value)}
+            disabled={isDepositing}
+          />
           <Button
-            type="button"
-            variant={withdrawMode === "parcial" ? "default" : "outline"}
-            onClick={() => setWithdrawMode("parcial")}
-            className={withdrawMode === "parcial" ? "bg-blue-600 hover:bg-blue-700" : ""}
+            onClick={handleDeposit}
+            disabled={!address || isDepositing || !depositAmount}
           >
-            Monto parcial
-          </Button>
-          <Button
-            type="button"
-            variant={withdrawMode === "todo" ? "default" : "outline"}
-            onClick={() => setWithdrawMode("todo")}
-            className={withdrawMode === "todo" ? "bg-blue-600 hover:bg-blue-700" : ""}
-          >
-            Retirar todo
+            {isDepositing ? (depositStatus ?? "Depositando...") : "Depositar en la bóveda"}
           </Button>
         </div>
 
-        {withdrawMode === "parcial" ? (
-          <>
-            <Input
-              type="number"
-              inputMode="decimal"
-              placeholder="Monto en ARGt"
-              value={withdrawAmount}
-              onChange={(event) => setWithdrawAmount(event.target.value)}
-              disabled={isWithdrawing}
-            />
+        <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
+          <p className="text-sm font-medium text-foreground">Retirar</p>
+          <div className="flex gap-2">
             <Button
-              onClick={executeWithdraw}
-              disabled={!address || isWithdrawing || !withdrawAmount}
-              className="bg-blue-600 hover:bg-blue-700"
+              type="button"
+              variant={withdrawMode === "parcial" ? "default" : "outline"}
+              onClick={() => setWithdrawMode("parcial")}
             >
-              {isWithdrawing ? (withdrawStatus ?? "Retirando...") : "Retirar parcial"}
+              Monto parcial
             </Button>
-          </>
-        ) : (
-          <Dialog>
-            <DialogTrigger asChild>
+            <Button
+              type="button"
+              variant={withdrawMode === "todo" ? "default" : "outline"}
+              onClick={() => setWithdrawMode("todo")}
+            >
+              Retirar todo
+            </Button>
+          </div>
+
+          {withdrawMode === "parcial" ? (
+            <>
+              <Input
+                type="number"
+                inputMode="decimal"
+                placeholder="Monto en ARGt"
+                value={withdrawAmount}
+                onChange={(event) => setWithdrawAmount(event.target.value)}
+                disabled={isWithdrawing}
+              />
               <Button
-                variant="destructive"
-                disabled={!address || isWithdrawing || shares === BigInt(0)}
+                onClick={executeWithdraw}
+                disabled={!address || isWithdrawing || !withdrawAmount}
               >
-                {isWithdrawing ? (withdrawStatus ?? "Retirando...") : "Retirar todo"}
+                {isWithdrawing ? (withdrawStatus ?? "Retirando...") : "Retirar parcial"}
               </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Retirar todo</DialogTitle>
-                <DialogDescription>
-                  Vas a retirar toda tu posición de la bóveda. Esta acción no se puede deshacer.
-                  Confirmar retiro.
-                </DialogDescription>
-              </DialogHeader>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <DialogClose asChild>
-                  <Button variant="destructive" onClick={executeWithdraw}>
-                    Confirmar retiro
-                  </Button>
-                </DialogClose>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        )}
+            </>
+          ) : (
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  variant="destructive"
+                  disabled={!address || isWithdrawing || shares === BigInt(0)}
+                >
+                  {isWithdrawing ? (withdrawStatus ?? "Retirando...") : "Retirar todo"}
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Retirar todo</DialogTitle>
+                  <DialogDescription>
+                    Vas a retirar toda tu posición de la bóveda. Esta acción no se puede deshacer.
+                    Confirmar retiro.
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter>
+                  <DialogClose asChild>
+                    <Button variant="outline">Cancelar</Button>
+                  </DialogClose>
+                  <DialogClose asChild>
+                    <Button variant="destructive" onClick={executeWithdraw}>
+                      Confirmar retiro
+                    </Button>
+                  </DialogClose>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
       </div>
     </div>
   );

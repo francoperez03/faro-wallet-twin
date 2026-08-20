@@ -122,11 +122,16 @@ export default function PasarACuentaPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Pasar a Cuenta</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / PASAR A CUENTA
+        </p>
+        <h1 className="font-serif text-3xl text-foreground">Pasar a Cuenta</h1>
+      </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Monto ({CHAIN_LABELS[DEPOSIT_CHAIN]})</span>
+        <span className="text-sm text-muted-foreground">Monto ({CHAIN_LABELS[DEPOSIT_CHAIN]})</span>
         <Input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -134,37 +139,37 @@ export default function PasarACuentaPage() {
           placeholder="0.0"
           disabled={isBusy}
         />
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Disponible en {CHAIN_LABELS[DEPOSIT_CHAIN]}:{" "}
           <span className="tabular-nums">{formatUnits(balanceOnArbitrum, decimals)}</span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
-        {amountError && <p className="text-sm text-red-600">{amountError}</p>}
+        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
         {showBridgeSuggestion && bridgeSuggestChain && (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             No te alcanza en {CHAIN_LABELS[DEPOSIT_CHAIN]}, pero tenés ARGt en{" "}
             {CHAIN_LABELS[bridgeSuggestChain]}.{" "}
-            <Link href="/bridge" className="text-blue-600">
+            <Link href="/bridge" className="text-gold">
               Bridgealo a {CHAIN_LABELS[DEPOSIT_CHAIN]} primero
             </Link>
           </p>
         )}
       </div>
 
-      <Button onClick={onSubmit} disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700">
+      <Button onClick={onSubmit} disabled={!canSubmit}>
         {status === "sending" ? "Enviando..." : "Pasar a Cuenta"}
       </Button>
 
-      {status === "confirming" && <p className="text-sm text-zinc-500">Confirmando...</p>}
+      {status === "confirming" && <p className="text-sm text-muted-foreground">Confirmando...</p>}
       {status === "acreditado" && (
-        <div className="rounded-md bg-zinc-100 p-4">
-          <p className="text-sm font-medium text-blue-600">Acreditado</p>
+        <div className="rounded-md border border-border bg-card p-4">
+          <p className="text-sm font-medium text-gold">Acreditado</p>
           {txHash && (
             <a
               href={`${EXPLORER_TX_URL[DEPOSIT_CHAIN]}${txHash}`}
               target="_blank"
               rel="noreferrer"
-              className="mt-1 inline-block text-sm text-blue-600"
+              className="mt-1 inline-block text-sm text-gold"
             >
               Ver en el explorer
             </a>
@@ -172,7 +177,7 @@ export default function PasarACuentaPage() {
         </div>
       )}
       {status === "timeout" && (
-        <p className="text-sm text-zinc-500">Puede tardar unos minutos, va a aparecer en tu Cuenta.</p>
+        <p className="text-sm text-muted-foreground">Puede tardar unos minutos, va a aparecer en tu Cuenta.</p>
       )}
     </div>
   );

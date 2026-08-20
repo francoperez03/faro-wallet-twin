@@ -91,11 +91,16 @@ export default function RetirarPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Retirar</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / RETIRAR
+        </p>
+        <h1 className="font-serif text-3xl text-foreground">Retirar</h1>
+      </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Red de destino</span>
+        <span className="text-sm text-muted-foreground">Red de destino</span>
         <div className="flex gap-2">
           {CHAINS.map((c) => (
             <button
@@ -106,8 +111,8 @@ export default function RetirarPage() {
               className={cn(
                 "min-h-11 flex-1 rounded-md border text-sm",
                 chain === c
-                  ? "border-blue-600 bg-blue-600 text-white"
-                  : "border-zinc-200 bg-white text-zinc-900"
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border bg-card text-foreground"
               )}
             >
               {CHAIN_LABELS[c]}
@@ -117,7 +122,7 @@ export default function RetirarPage() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-zinc-500">Monto</span>
+        <span className="text-sm text-muted-foreground">Monto</span>
         <Input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -125,35 +130,35 @@ export default function RetirarPage() {
           placeholder="0.0"
           disabled={isBusy}
         />
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           Saldo en tu Cuenta:{" "}
           <span className="tabular-nums">
             {argtBalance != null ? formatUnits(argtBalance, decimals) : "..."}
           </span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
-        {amountError && <p className="text-sm text-red-600">{amountError}</p>}
+        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
       </div>
 
-      <Button onClick={onSubmit} disabled={!canSubmit} className="bg-blue-600 hover:bg-blue-700">
+      <Button onClick={onSubmit} disabled={!canSubmit}>
         {status === "processing" ? "Procesando..." : "Retirar"}
       </Button>
 
       {status === "sent" && txHash && (
-        <div className="rounded-md bg-zinc-100 p-4">
-          <p className="text-sm font-medium text-blue-600">Enviado</p>
+        <div className="rounded-md border border-border bg-card p-4">
+          <p className="text-sm font-medium text-gold">Enviado</p>
           <a
             href={`${EXPLORER_TX_URL[chain]}${txHash}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-1 inline-block text-sm text-blue-600"
+            className="mt-1 inline-block text-sm text-gold"
           >
             Ver en el explorer
           </a>
         </div>
       )}
       {status === "failed" && (
-        <p className="text-sm text-red-600">{failReason ?? ERROR_COPY}</p>
+        <p className="text-sm text-destructive">{failReason ?? ERROR_COPY}</p>
       )}
     </div>
   );
