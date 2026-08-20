@@ -24,36 +24,36 @@ function StatusForRegistry({ registry }: { registry: (typeof REGISTRIES)[number]
   return (
     <div className="flex flex-col gap-6">
       {isSynthetic && (
-        <Badge variant="outline" className="w-fit text-zinc-500">
+        <Badge variant="outline" className="w-fit text-muted-foreground">
           Datos sintéticos
         </Badge>
       )}
 
       {status === "none" || !cut ? (
-        <p className="text-sm text-zinc-500">Todavía no hay un corte publicado para este registry.</p>
+        <p className="text-sm text-muted-foreground">Todavía no hay un corte publicado para este registry.</p>
       ) : (
         <>
-          <div className="rounded-lg bg-zinc-100 p-4">
-            <p className="text-sm text-zinc-500">Frescura</p>
-            <p className="mt-1 text-lg font-semibold text-zinc-900">
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Frescura</p>
+            <p className="mt-1 font-serif text-2xl text-gold">
               Último corte hace {Math.max(0, Math.round(hoursAgo ?? 0))} h
-              {status === "amber" && <span className="ml-2 text-sm font-normal text-[#D97706]">vencido</span>}
+              {status === "amber" && <span className="ml-2 text-sm font-normal text-amber">vencido</span>}
             </p>
           </div>
 
-          <div className="rounded-lg bg-zinc-100 p-4">
-            <p className="text-sm text-zinc-500">Veredictos</p>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Veredictos</p>
             <div className="mt-1 flex flex-wrap gap-2">
               {cut.verdicts.map((v, i) => (
-                <Badge key={i} className={v ? "border-transparent bg-[#16A34A] text-white" : "border-transparent bg-[#DC2626] text-white"}>
+                <Badge key={i} className={v ? "border-transparent bg-green-dim text-green" : "border-transparent bg-destructive text-white"}>
                   Token {i}: {v ? "cubierto" : "no cubierto"}
                 </Badge>
               ))}
             </div>
           </div>
 
-          <div className="rounded-lg bg-zinc-100 p-4">
-            <p className="text-sm text-zinc-500">Cobertura por bucket</p>
+          <div className="rounded-lg border border-border bg-card p-4">
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Cobertura por bucket</p>
             <div className="mt-1 flex flex-wrap gap-2">
               {cut.coverageBps.map((bps, i) => (
                 <Badge key={i} variant="secondary">
@@ -68,7 +68,7 @@ function StatusForRegistry({ registry }: { registry: (typeof REGISTRIES)[number]
       <DeclaredMask />
 
       <div>
-        <p className="mb-2 text-sm text-zinc-500">Historial de cortes</p>
+        <p className="mb-2 font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Historial de cortes</p>
         {isLoadingHistory ? <Skeleton className="h-24 w-full" /> : <CutHistory history={history} chainId={registry.chainId} />}
       </div>
       <DisclosureFooter className="border-0 bg-transparent px-0" />
@@ -81,10 +81,11 @@ export default function StatusPage() {
   const registry = REGISTRIES[selected] ?? REGISTRIES[0];
 
   return (
-    <div className="mx-auto flex max-w-lg flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-3xl lg:p-8">
       <div>
-        <h1 className="text-[20px] font-semibold text-zinc-900">Solvencia de Faro</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// FARO / STATUS</p>
+        <h1 className="font-serif text-3xl text-foreground">Solvencia de Faro</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Verificable por cualquiera, sin login, directo desde el SobrecitoRegistry on-chain.
         </p>
       </div>
@@ -104,7 +105,7 @@ export default function StatusPage() {
       {registry ? (
         <StatusForRegistry registry={registry} />
       ) : (
-        <p className="text-sm text-zinc-500">No hay ningún registry configurado.</p>
+        <p className="text-sm text-muted-foreground">No hay ningún registry configurado.</p>
       )}
     </div>
   );
