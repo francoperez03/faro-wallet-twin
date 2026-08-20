@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ActivityCard } from "@/components/activity-card";
 import { BalanceList } from "@/components/balance-list";
+import { RebalancePanel } from "@/components/rebalance-panel";
 import { Faro } from "@/components/faro";
 import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
@@ -51,13 +52,14 @@ export default function HomePage() {
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
   const [token, setToken] = useState<TokenKey>("ARGt");
   const { symbol, decimals } = TOKENS[token];
+  const balances = useTokenBalances(walletAddress, token);
   const {
     perChain,
     total: walletTotal,
     errors,
     isLoading: isLoadingWallet,
     refetch,
-  } = useTokenBalances(walletAddress, token);
+  } = balances;
   // Saldo total = wallet en todas las redes + lo invertido en Rewards (ledger, solo ARGt).
   const rewards = useRewardsBalance();
   const invested =
@@ -391,13 +393,17 @@ export default function HomePage() {
                       </button>
                       {showBreakdown && (
                         <div ref={breakdownRef} className="pb-2">
-                          <BalanceList
-                            perChain={perChain}
-                            errors={errors}
-                            decimals={decimals}
-                            symbol={symbol}
-                            address={walletAddress}
-                          />
+                          {token === "ARGt" ? (
+                            <RebalancePanel walletAddress={walletAddress} balances={balances} />
+                          ) : (
+                            <BalanceList
+                              perChain={perChain}
+                              errors={errors}
+                              decimals={decimals}
+                              symbol={symbol}
+                              address={walletAddress}
+                            />
+                          )}
                         </div>
                       )}
                     </div>
