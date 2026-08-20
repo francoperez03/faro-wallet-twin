@@ -8,16 +8,6 @@ import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { ActivityCard } from "@/components/activity-card";
 import { BalanceList } from "@/components/balance-list";
 import { Faro } from "@/components/faro";
@@ -27,7 +17,7 @@ import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
-import { truncateAddress, cn } from "@/lib/utils";
+import { cn  } from "@/lib/utils";
 
 /** Radix Tabs necesita un value; este no matchea ningún trigger, así el panel arranca colapsado
  * (patrón vault-aggregator/lemon-account-card.tsx). */
@@ -41,7 +31,7 @@ const TAB_TRIGGER =
   "min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
 
 export default function HomePage() {
-  const { ready, authenticated, user, login, logout } = usePrivy();
+  const { ready, authenticated, user, login } = usePrivy();
   // Hooks siempre antes de los returns condicionales (React #310).
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
   const [token, setToken] = useState<TokenKey>("ARGt");
@@ -217,7 +207,7 @@ export default function HomePage() {
       <div className="flex-1 overflow-hidden">
         <div ref={railRef} className="flex w-[200%]">
           <div ref={(el) => { colRefs.current.home = el; }} className={cn("w-1/2", step !== "home" && "opacity-0")} aria-hidden={step !== "home"}>
-            <div className="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8">
+            <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
               <div className="flex flex-col gap-6">
                 {/* Filtro de moneda por bandera (pelotitas), arriba de la card de saldo */}
                 <div
@@ -354,45 +344,6 @@ export default function HomePage() {
                 <ActivityCard walletAddress={walletAddress} />
               </div>
 
-              <div className="flex flex-col gap-6">
-                <div className="rounded-lg border border-border bg-card p-4">
-                  <p className="text-sm text-muted-foreground">Tu wallet</p>
-                  <p className="mt-1 font-mono text-base text-foreground">
-                    {walletAddress
-                      ? truncateAddress(walletAddress)
-                      : "Sin embedded wallet"}
-                  </p>
-                </div>
-
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="self-start text-destructive hover:text-destructive"
-                    >
-                      Cerrar sesión
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Cerrar sesión</DialogTitle>
-                      <DialogDescription>
-                        Vas a cerrar sesión en este dispositivo. Confirmar.
-                      </DialogDescription>
-                    </DialogHeader>
-                    <DialogFooter>
-                      <DialogClose asChild>
-                        <Button variant="outline">Cancelar</Button>
-                      </DialogClose>
-                      <DialogClose asChild>
-                        <Button variant="destructive" onClick={() => logout()}>
-                          Cerrar sesión
-                        </Button>
-                      </DialogClose>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
             </div>
           </div>
 
