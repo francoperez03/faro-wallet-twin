@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
+import { usePrivy, useLoginWithEmail } from "@privy-io/react-auth";
+import { toast } from "sonner";
 import { animate } from "animejs";
 import {
   ArrowDownLeft,
@@ -48,6 +49,23 @@ const TAB_TRIGGER =
 
 export default function HomePage() {
   const { ready, authenticated, user, login } = usePrivy();
+  const { sendCode, loginWithCode } = useLoginWithEmail();
+  const [demoLoading, setDemoLoading] = useState(false);
+  // Test account de Privy (dashboard → Authentication → Advanced). Solo funciona en apps dev.
+  const demoEmail = process.env.NEXT_PUBLIC_DEMO_EMAIL;
+  const demoOtp = process.env.NEXT_PUBLIC_DEMO_OTP;
+  async function loginDemo() {
+    if (!demoEmail || !demoOtp) return;
+    setDemoLoading(true);
+    try {
+      await sendCode({ email: demoEmail });
+      await loginWithCode({ code: demoOtp });
+    } catch {
+      toast.error("No se pudo entrar con la cuenta demo.");
+    } finally {
+      setDemoLoading(false);
+    }
+  }
   // Hooks siempre antes de los returns condicionales (React #310).
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
   const [token, setToken] = useState<TokenKey>("ARGt");
@@ -227,6 +245,11 @@ export default function HomePage() {
         <Faro size={160} />
         <h1 className="font-serif text-3xl text-foreground">Faro</h1>
         <Button onClick={() => login()}>Ingresar</Button>
+        {demoEmail && demoOtp && (
+          <Button variant="outline" onClick={loginDemo} disabled={demoLoading}>
+            {demoLoading ? "Entrando..." : "Entrar con cuenta demo"}
+          </Button>
+        )}
       </div>
     );
   }
