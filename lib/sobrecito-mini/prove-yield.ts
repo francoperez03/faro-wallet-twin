@@ -159,6 +159,15 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
   });
   await publicClient.waitForTransactionReceipt({ hash: txHash });
 
+  // Vision publica (durabilidad, ver .planning): B1/B2 y las dos lecturas convertToAssets de
+  // ESTA corrida, persistidas por corte_id. /status las sirve via /api/status/yield-cuts
+  // cuando un nodo de archivo no esta disponible para recomputar on-chain en vivo.
+  await sql`
+    insert into yield_cuts (corte_id, block_b1, block_b2, value_b1, value_b2)
+    values (${corteId}, ${result.blockB1?.toString() ?? null}, ${result.blockB2.toString()}, ${result.valueB1?.toString() ?? null}, ${result.valueB2.toString()})
+    on conflict (corte_id) do nothing
+  `;
+
   // Vision publica (D-diseño): B1/B2 del corte publicado, para que /status recompute
   // Δ = convertToAssets(B2) - convertToAssets(B1) con dos eth_call historicos.
   await sql`

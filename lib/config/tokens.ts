@@ -95,23 +95,29 @@ export const REGISTRIES: {
   label: string;
   address: `0x${string}`;
   chainId: number;
+  /** Bloque de deploy del registry (tx en deployments.json): fromBlock real de useCutHistory,
+   * evita escanear desde el bloque 0 en cada carga. */
+  deployBlock: bigint;
 }[] = [
   {
     label: process.env.NEXT_PUBLIC_REGISTRY_1_LABEL ?? "Fixture sintética",
     address: (process.env.NEXT_PUBLIC_REGISTRY_1_ADDRESS ??
       "0x89ec9bf3cd42a037a2d004813733fc0d6e2ab03d") as `0x${string}`,
     chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_1_CHAIN_ID ?? 42161),
+    deployBlock: BigInt(process.env.NEXT_PUBLIC_REGISTRY_1_DEPLOY_BLOCK ?? 496398310),
   },
   {
     label: process.env.NEXT_PUBLIC_REGISTRY_2_LABEL ?? "Corte real (mini)",
     address: (process.env.NEXT_PUBLIC_REGISTRY_2_ADDRESS ??
       "0x34d16b00809fcc6a6b0855d2052708615dbdc2c7") as `0x${string}`,
     chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_2_CHAIN_ID ?? 42161),
+    deployBlock: BigInt(process.env.NEXT_PUBLIC_REGISTRY_2_DEPLOY_BLOCK ?? 496409957),
   },
   {
     label: process.env.NEXT_PUBLIC_REGISTRY_3_LABEL ?? "Rendimiento (yield)",
     address: (process.env.NEXT_PUBLIC_REGISTRY_3_ADDRESS ??
       "0x06282d1a04be98f400387f3965704f8846d7fefb") as `0x${string}`,
     chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_3_CHAIN_ID ?? 42161),
+    deployBlock: BigInt(process.env.NEXT_PUBLIC_REGISTRY_3_DEPLOY_BLOCK ?? 496520325),
   },
 ];

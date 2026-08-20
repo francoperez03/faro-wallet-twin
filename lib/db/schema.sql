@@ -58,3 +58,17 @@ create table if not exists openings (
 );
 
 create index if not exists openings_user_id_idx on openings (user_id);
+
+-- Vision publica del pivote de yield (durabilidad del recompute de /status): B1/B2 y las dos
+-- lecturas convertToAssets de cada corte, persistidas en lib/sobrecito-mini/prove-yield.ts al
+-- momento del corte. Permite a YieldComparison mostrar el dato "informado por el operador"
+-- cuando un nodo de archivo no esta disponible para recomputar on-chain. Idempotente: mismo
+-- corte_id no rompe (PK simple, insert unico por corte).
+create table if not exists yield_cuts (
+  corte_id text primary key,
+  block_b1 bigint,
+  block_b2 bigint,
+  value_b1 numeric(38, 0),
+  value_b2 numeric(38, 0),
+  created_at timestamptz default now()
+);

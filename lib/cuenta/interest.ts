@@ -43,6 +43,12 @@ export type AccrueInterestResult = {
   blockB1: bigint | null;
   /** Bloque del snapshot de ESTA corrida. */
   blockB2: bigint;
+  /** convertToAssets en blockB1 (null si blockB1 es null). Persistido por el pivote de yield
+   * (lib/sobrecito-mini/prove-yield.ts) en yield_cuts, para que /status pueda mostrar el
+   * dato "informado por el operador" sin depender de un nodo de archivo. */
+  valueB1: bigint | null;
+  /** convertToAssets en blockB2 (== `actual`), misma razon que valueB1. */
+  valueB2: bigint;
   /** Todos los usuarios con balance>0 considerados en el reparto (denominador de la pro rata),
    * balance = base pre-credito, reward = share floor (0 incluido). Vacio si no hubo delta>0. */
   entries: InterestEntry[];
@@ -100,6 +106,8 @@ export async function accrueInterest(): Promise<AccrueInterestResult> {
         delta: BigInt(0),
         blockB1: null,
         blockB2: currentBlock,
+        valueB1: null,
+        valueB2: actual,
         entries: [],
       };
     }
@@ -124,6 +132,8 @@ export async function accrueInterest(): Promise<AccrueInterestResult> {
         delta: BigInt(0),
         blockB1,
         blockB2: currentBlock,
+        valueB1: snapshotPrevio,
+        valueB2: actual,
         entries: [],
       };
     }
@@ -140,6 +150,8 @@ export async function accrueInterest(): Promise<AccrueInterestResult> {
         delta: BigInt(0),
         blockB1,
         blockB2: currentBlock,
+        valueB1: snapshotPrevio,
+        valueB2: actual,
         entries: [],
       };
     }
@@ -167,6 +179,6 @@ export async function accrueInterest(): Promise<AccrueInterestResult> {
       creditedTotal += share;
     }
 
-    return { deltaAccrued: creditedTotal, usersCredited, deltaRaw, delta, blockB1, blockB2: currentBlock, entries };
+    return { deltaAccrued: creditedTotal, usersCredited, deltaRaw, delta, blockB1, blockB2: currentBlock, valueB1: snapshotPrevio, valueB2: actual, entries };
   });
 }
