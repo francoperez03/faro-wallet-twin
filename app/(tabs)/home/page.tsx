@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { animate } from "animejs";
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Layers } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ChevronDown } from "lucide-react";
 import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -25,7 +25,12 @@ import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import { TOKENS, TOKEN_KEYS, type ChainKey, type TokenKey } from "@/lib/config/tokens";
+import {
+  TOKENS,
+  TOKEN_KEYS,
+  type ChainKey,
+  type TokenKey,
+} from "@/lib/config/tokens";
 import { truncateAddress } from "@/lib/utils";
 
 /** Radix Tabs necesita un value; este no matchea ningún trigger, así el panel arranca colapsado
@@ -40,17 +45,12 @@ export default function HomePage() {
   const { ready, authenticated, user, login, logout } = usePrivy();
   // Hooks siempre antes de los returns condicionales (React #310).
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
-  // "all" = vista resumen de todas las monedas; las acciones (enviar) siempre operan sobre un token.
-  const [view, setView] = useState<TokenKey | "all">("ARGt");
-  const token: TokenKey = view === "all" ? "ARGt" : view;
+  const [token, setToken] = useState<TokenKey>("ARGt");
   const { symbol, decimals } = TOKENS[token];
-  // ponytail: un hook por token (lista fija); generalizar si TOKENS crece más allá de 2 o 3.
-  const balances = {
-    ARGt: useTokenBalances(walletAddress, "ARGt"),
-    BOLt: useTokenBalances(walletAddress, "BOLt"),
-  } satisfies Record<TokenKey, ReturnType<typeof useTokenBalances>>;
-  const { perChain, total, errors, refetch } = balances[token];
-  const isLoading = view === "all" ? TOKEN_KEYS.some((k) => balances[k].isLoading) : balances[token].isLoading;
+  const { perChain, total, errors, isLoading, refetch } = useTokenBalances(
+    walletAddress,
+    token,
+  );
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const [sendChain, setSendChain] = useState<ChainKey | undefined>(undefined);
@@ -80,7 +80,10 @@ export default function HomePage() {
       paint();
       return;
     }
-    if (typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    if (
+      typeof window.matchMedia === "function" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       heroState.current.value = target;
       paint();
       return;
@@ -123,20 +126,23 @@ export default function HomePage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
       <div className="flex flex-col gap-6">
-
         {/* Filtro de moneda por bandera (pelotitas), arriba de la card de saldo */}
-        <div role="tablist" aria-label="Moneda" className="flex items-center gap-3">
-          {(["all", ...TOKEN_KEYS] as const).map((key) => {
-            const active = view === key;
+        <div
+          role="tablist"
+          aria-label="Moneda"
+          className="flex items-center gap-3"
+        >
+          {TOKEN_KEYS.map((key) => {
+            const active = token === key;
             return (
               <button
                 key={key}
                 type="button"
                 role="tab"
                 aria-selected={active}
-                aria-label={key === "all" ? "Todas las monedas" : TOKENS[key].name}
+                aria-label={TOKENS[key].name}
                 onClick={() => {
-                  setView(key);
+                  setToken(key);
                   setPanel(null);
                 }}
                 className={`flex min-h-11 items-center gap-2 rounded-full border py-1 pl-1 pr-3 text-xs font-semibold transition-colors ${
@@ -151,9 +157,9 @@ export default function HomePage() {
                     active ? "opacity-100" : "opacity-60"
                   }`}
                 >
-                  {key === "all" ? <Layers className="size-4" /> : TOKENS[key].flag}
+                  {TOKENS[key].flag}
                 </span>
-                {key === "all" ? "Todo" : TOKENS[key].symbol}
+                {TOKENS[key].symbol}
               </button>
             );
           })}
@@ -163,23 +169,6 @@ export default function HomePage() {
           <p className="text-sm text-muted-foreground">Saldo total</p>
           {isLoading ? (
             <Skeleton className="mt-2 h-10 w-48" />
-          ) : view === "all" ? (
-            <ul className="mt-2 flex flex-col gap-1">
-              {TOKEN_KEYS.map((k) => (
-                <li key={k} className="flex items-baseline gap-2">
-                  <span aria-hidden="true" className="text-base leading-none">
-                    {TOKENS[k].flag}
-                  </span>
-                  <span className="font-serif text-2xl leading-tight tracking-tight text-gold tabular-nums">
-                    {Number(formatUnits(balances[k].total, TOKENS[k].decimals)).toLocaleString("es-AR", {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2,
-                    })}{" "}
-                    {TOKENS[k].symbol}
-                  </span>
-                </li>
-              ))}
-            </ul>
           ) : (
             <p
               ref={heroRef}
@@ -190,7 +179,7 @@ export default function HomePage() {
             </p>
           )}
 
-          {!isLoading && view !== "all" && (
+          {!isLoading && (
             <Tabs
               value={panel ?? NONE}
               onValueChange={(next) => {
@@ -248,59 +237,39 @@ export default function HomePage() {
               </button>
               {showBreakdown && (
                 <div ref={breakdownRef} className="pb-2">
-                  {view === "all" ? (
-                    TOKEN_KEYS.map((k) => (
-                      <div key={k} className="pt-2">
-                        <p className="text-xs font-semibold text-muted-foreground">
-                          <span aria-hidden="true">{TOKENS[k].flag}</span> {TOKENS[k].symbol}
-                        </p>
-                        <BalanceList
-                          perChain={balances[k].perChain}
-                          errors={balances[k].errors}
-                          decimals={TOKENS[k].decimals}
-                          symbol={TOKENS[k].symbol}
-                          address={walletAddress}
-                          onSend={(chain) => {
-                            setView(k);
-                            openSendFor(chain);
-                          }}
-                        />
-                      </div>
-                    ))
-                  ) : (
-                    <BalanceList
-                      perChain={perChain}
-                      errors={errors}
-                      decimals={decimals}
-                      symbol={symbol}
-                      address={walletAddress}
-                      onSend={openSendFor}
-                    />
-                  )}
+                  <BalanceList
+                    perChain={perChain}
+                    errors={errors}
+                    decimals={decimals}
+                    symbol={symbol}
+                    address={walletAddress}
+                    onSend={openSendFor}
+                  />
                 </div>
               )}
             </div>
           )}
         </div>
 
-        {view === "all" ? (
-          TOKEN_KEYS.map((k) => <ActivityCard key={k} walletAddress={walletAddress} token={k} />)
-        ) : (
-          <ActivityCard walletAddress={walletAddress} token={token} />
-        )}
+        <ActivityCard walletAddress={walletAddress} />
       </div>
 
       <div className="flex flex-col gap-6">
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Tu wallet</p>
           <p className="mt-1 font-mono text-base text-foreground">
-            {walletAddress ? truncateAddress(walletAddress) : "Sin embedded wallet"}
+            {walletAddress
+              ? truncateAddress(walletAddress)
+              : "Sin embedded wallet"}
           </p>
         </div>
 
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="self-start text-destructive hover:text-destructive">
+            <Button
+              variant="outline"
+              className="self-start text-destructive hover:text-destructive"
+            >
               Cerrar sesión
             </Button>
           </DialogTrigger>
