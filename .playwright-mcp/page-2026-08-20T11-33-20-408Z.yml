@@ -1,0 +1,10 @@
+- generic [active] [ref=f16e1]:
+  - generic [ref=f16e2]:
+    - generic [ref=f16e3]:
+      - paragraph [ref=f16e4]: // FARO / STATUS
+      - heading "Solvencia de Faro" [level=1] [ref=f16e5]
+      - paragraph [ref=f16e6]: Verificable por cualquiera, sin login, directo desde el SobrecitoRegistry on-chain.
+    - tablist [ref=f16e8]:
+      - tab "Fixture sintética" [selected] [ref=f16e9]
+      - tab "Corte real (mini)" [ref=f16e10]
+  - region "Notifications alt+T"
