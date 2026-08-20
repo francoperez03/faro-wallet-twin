@@ -39,7 +39,10 @@ Un neobanco de 24 horas sobre las stablecoins de Twin. Arranca con la wallet sel
   1. SobrecitoRegistry y HonkVerifier están desplegados en Arbitrum via Deploy.s.sol con el key_hash de la fixture
   2. Un publish con la prueba de la fixture commiteada se acepta on-chain y queda visible en el explorer
   3. Un publish inválido (prueba que no corresponde) revierte
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 02-01-PLAN.md — Preflight + deploy de SobrecitoRegistry y HonkVerifier en Arbitrum One
+- [ ] 02-02-PLAN.md — Publish.s.sol, publish real de la fixture + caso negativo simulado, handoff de addresses al repo twin
 
 ### Phase 3: Modo Cuenta
 **Goal**: Un usuario mantiene un saldo custodial en el neobanco, con interés, y puede mover fondos entre su wallet y su cuenta.
@@ -51,7 +54,13 @@ Un neobanco de 24 horas sobre las stablecoins de Twin. Arranca con la wallet sel
   3. User ve su saldo en Cuenta, el interés acumulado y la tasa actual
   4. User retira de su Cuenta a su embedded wallet en la chain elegida, respetando el límite diario
   5. El ledger en Postgres tiene cuentas y movimientos (deposit, withdraw, interest) sembrados con usuarios sintéticos, con volumen suficiente para un corte
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Ledger Postgres (schema, seed 60 usuarios sintéticos), identidad server-side vía Privy
+- [ ] 03-02-PLAN.md — Depósitos por evento Transfer y retiros firmados con límite diario
+- [ ] 03-03-PLAN.md — Interés real desde el vault (cron + manual) y tasa APY
+- [ ] 03-04-PLAN.md — UI de Cuenta: toggle, home, pasar a cuenta, retirar
 **UI hint**: yes
 
 ### Phase 4: Solvencia Visible
@@ -63,7 +72,11 @@ Un neobanco de 24 horas sobre las stablecoins de Twin. Arranca con la wallet sel
   2. User verifica su inclusión: pide su opening, recomputa el commitment Poseidon2 en el browser y ve el estado verde/rojo/pendiente
   3. La página pública `/status/twin-neobank` muestra veredictos, cobertura, frescura, historial de cortes y el declaredMask en claro, sin login
   4. (stretch, no bloqueante) El pipeline real exporta el ledger a CSV, corre orchestrate_tree.py y publica la prueba de la raíz real, reemplazando la fixture
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 04-01-PLAN.md — Badge de solvencia en Cuenta·Home + página pública /status/twin-neobank (lectura directa del Registry)
+- [ ] 04-02-PLAN.md — Verificación de inclusión: vector Poseidon2 real, opening autenticado, pantalla de verificación
+- [ ] 04-03-PLAN.md — Corte mini (stretch, no bloqueante): gate bb.js, segundo Registry, pipeline de proving + publish
 **UI hint**: yes
 
 ### Phase 5: Ship
@@ -74,7 +87,11 @@ Un neobanco de 24 horas sobre las stablecoins de Twin. Arranca con la wallet sel
   1. La app está deployada en Vercel con una URL pública
   2. El disclosure es visible in-app: PoC no auditado, qué está probado y qué declarado
   3. La submission fue enviada (URL, nombre, mail) antes del jueves 20/08 18 h
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 05-01-PLAN.md — Disclosure + footer + feature flags (HIDDEN_SECTIONS)
+- [ ] 05-02-PLAN.md — Env vars audit + cron + deploy verification
+- [ ] 05-03-PLAN.md — Naming checkpoint + smoke test + submission
 **UI hint**: yes
 
 ## Progress
@@ -85,7 +102,7 @@ Phases 1 and 2 can run in parallel (Phase 2 has no app dependency). Phase 3 need
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Wallet Mode | 0/TBD | Not started | - |
-| 2. Sobrecito Registry | 0/TBD | Not started | - |
-| 3. Modo Cuenta | 0/TBD | Not started | - |
+| 2. Sobrecito Registry | 0/2 | Not started | - |
+| 3. Modo Cuenta | 0/4 | Not started | - |
 | 4. Solvencia Visible | 0/TBD | Not started | - |
 | 5. Ship | 0/TBD | Not started | - |
