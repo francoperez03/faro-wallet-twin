@@ -7,6 +7,7 @@ import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TOKENS, VAULT_ARGT_PRIME } from "@/lib/config/tokens";
+import { SolvencyBadge } from "@/components/cuenta/solvency-badge";
 
 const MORPHO_VAULT_URL = `https://app.morpho.org/arbitrum/vault/${VAULT_ARGT_PRIME.address}`;
 
@@ -61,6 +62,8 @@ export default function CuentaPage() {
           {formatUnits(account?.argtBalance ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
         </p>
       </div>
+
+      <SolvencyBadge />
 
       <div className="rounded-lg bg-zinc-100 p-4">
         <p className="text-sm text-zinc-500">Interés acumulado</p>
