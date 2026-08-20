@@ -25,12 +25,7 @@ import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import {
-  TOKENS,
-  TOKEN_KEYS,
-  type ChainKey,
-  type TokenKey,
-} from "@/lib/config/tokens";
+import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
 import { truncateAddress } from "@/lib/utils";
 
 /** Radix Tabs necesita un value; este no matchea ningún trigger, así el panel arranca colapsado
@@ -53,7 +48,6 @@ export default function HomePage() {
   );
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
-  const [sendChain, setSendChain] = useState<ChainKey | undefined>(undefined);
   const [showBreakdown, setShowBreakdown] = useState(false);
   const breakdownRef = useRevealAnimation<HTMLDivElement>(showBreakdown);
 
@@ -98,11 +92,6 @@ export default function HomePage() {
       animation.pause();
     };
   }, [total, isLoading, decimals, symbol]);
-
-  function openSendFor(chain: ChainKey) {
-    setSendChain(chain);
-    setPanel("enviar");
-  }
 
   if (!ready) {
     return (
@@ -186,7 +175,6 @@ export default function HomePage() {
                 if (next === NONE) {
                   setPanel(null);
                 } else {
-                  setSendChain(undefined);
                   setPanel(next as PanelKey);
                 }
               }}
@@ -209,7 +197,6 @@ export default function HomePage() {
                   token={token}
                   perChain={perChain}
                   refetch={refetch}
-                  initialChain={sendChain}
                   onDone={() => setPanel(null)}
                 />
               </TabsContent>
@@ -243,7 +230,6 @@ export default function HomePage() {
                     decimals={decimals}
                     symbol={symbol}
                     address={walletAddress}
-                    onSend={openSendFor}
                   />
                 </div>
               )}

@@ -35,29 +35,24 @@ export function SendPanel({
   token = "ARGt",
   perChain,
   refetch,
-  initialChain,
   onDone,
 }: {
   walletAddress: `0x${string}` | undefined;
   token?: TokenKey;
   perChain: Record<ChainKey, bigint>;
   refetch: () => void | Promise<unknown>;
-  initialChain?: ChainKey;
   onDone?: () => void;
 }) {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
 
-  const [chain, setChain] = useState<ChainKey>(initialChain ?? CHAINS[0]);
+  const [chain, setChain] = useState<ChainKey>(CHAINS[0]);
   const [to, setTo] = useState("");
   const [amount, setAmount] = useState("");
   const [stage, setStage] = useState<TxButtonStage>("idle");
   const [hash, setHash] = useState<`0x${string}` | undefined>(undefined);
 
-  useEffect(() => {
-    if (initialChain) setChain(initialChain);
-  }, [initialChain]);
 
   const receipt = useWaitForTransactionReceipt({
     hash,

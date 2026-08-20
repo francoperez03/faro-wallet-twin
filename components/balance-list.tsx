@@ -10,14 +10,12 @@ export function BalanceList({
   decimals,
   symbol,
   address,
-  onSend,
 }: {
   perChain: Record<ChainKey, bigint>;
   errors: Partial<Record<ChainKey, boolean>>;
   decimals: number;
   symbol: string;
   address: `0x${string}` | undefined;
-  onSend: (chain: ChainKey) => void;
 }) {
   const [expanded, setExpanded] = useState<ChainKey | null>(null);
 
@@ -34,7 +32,6 @@ export function BalanceList({
           address={address}
           expanded={expanded === chain}
           onToggle={() => setExpanded((current) => (current === chain ? null : chain))}
-          onSend={() => onSend(chain)}
         />
       ))}
     </div>

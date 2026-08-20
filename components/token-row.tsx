@@ -1,9 +1,8 @@
 "use client";
 
-import { ExternalLink, Send } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { formatUnits } from "viem";
 import { useBalance } from "wagmi";
-import { Button } from "@/components/ui/button";
 import { CHAIN_IDS, CHAIN_LABELS, EXPLORER_TX_URL, type ChainKey } from "@/lib/config/tokens";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 
@@ -16,7 +15,6 @@ export function TokenRow({
   address,
   expanded,
   onToggle,
-  onSend,
 }: {
   chain: ChainKey;
   balance: bigint;
@@ -26,7 +24,6 @@ export function TokenRow({
   address: `0x${string}` | undefined;
   expanded: boolean;
   onToggle: () => void;
-  onSend: () => void;
 }) {
   const panelRef = useRevealAnimation<HTMLDivElement>(expanded);
 
@@ -84,11 +81,6 @@ export function TokenRow({
               Ver en el explorer
             </a>
           )}
-
-          <Button type="button" variant="outline" size="sm" onClick={onSend} className="self-start">
-            <Send className="size-4" aria-hidden="true" />
-            Enviar desde {CHAIN_LABELS[chain]}
-          </Button>
         </div>
       )}
     </div>
