@@ -7,16 +7,10 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CHAINS, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import { CHAINS, CHAIN_LABELS, TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useBridge, type BridgeStatus } from "@/lib/hooks/use-bridge";
 import { cn } from "@/lib/utils";
-
-const CHAIN_LABELS: Record<ChainKey, string> = {
-  arbitrum: "Arbitrum",
-  base: "Base",
-  polygon: "Polygon",
-};
 
 const NATIVE_SYMBOL: Record<ChainKey, string> = {
   arbitrum: "ETH",

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
-import { Home, Send, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-react";
+import { Home, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useCuentaMode } from "@/lib/hooks/use-cuenta-mode";
@@ -18,7 +18,6 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
   // id: sección de la prioridad de sacrificio de D-12 ('m1' -> Home nunca se oculta).
   const TABS = [
     { id: "m1", href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home, section: "cuenta" },
-    { id: "m1", href: "/send", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send, section: "wallet" },
     { id: "vault", href: "/rewards", label: "Rewards", ariaLabel: "Ir a Rewards", icon: TrendingUp, section: "wallet" },
     { id: "bridge", href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight, section: "wallet" },
     { id: "m1", href: "/activity", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered, section: "wallet" },
