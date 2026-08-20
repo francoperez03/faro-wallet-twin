@@ -4,7 +4,7 @@ import { useAccount, useReadContract } from "wagmi";
 import { arbitrum } from "viem/chains";
 import { VAULT_ARGT_PRIME } from "@/lib/config/tokens";
 
-// ponytail: minimal ERC-4626 slice, solo lo que este hook necesita.
+// ponytail: slice ERC-4626 mínimo que usa la app (lecturas, deposit/withdraw/redeem y sus eventos).
 export const vaultAbi = [
   {
     type: "function",
@@ -22,11 +22,29 @@ export const vaultAbi = [
   },
   {
     type: "function",
+    name: "maxWithdraw",
+    stateMutability: "view",
+    inputs: [{ name: "owner", type: "address" }],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "deposit",
     stateMutability: "nonpayable",
     inputs: [
       { name: "assets", type: "uint256" },
       { name: "receiver", type: "address" },
+    ],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "withdraw",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "assets", type: "uint256" },
+      { name: "receiver", type: "address" },
+      { name: "owner", type: "address" },
     ],
     outputs: [{ name: "", type: "uint256" }],
   },
@@ -42,17 +60,32 @@ export const vaultAbi = [
     outputs: [{ name: "", type: "uint256" }],
   },
   {
-    type: "function",
-    name: "previewWithdraw",
-    stateMutability: "view",
-    inputs: [{ name: "assets", type: "uint256" }],
-    outputs: [{ name: "", type: "uint256" }],
+    type: "event",
+    name: "Deposit",
+    inputs: [
+      { name: "sender", type: "address", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+      { name: "assets", type: "uint256", indexed: false },
+      { name: "shares", type: "uint256", indexed: false },
+    ],
+  },
+  {
+    type: "event",
+    name: "Withdraw",
+    inputs: [
+      { name: "sender", type: "address", indexed: true },
+      { name: "receiver", type: "address", indexed: true },
+      { name: "owner", type: "address", indexed: true },
+      { name: "assets", type: "uint256", indexed: false },
+      { name: "shares", type: "uint256", indexed: false },
+    ],
   },
 ] as const;
 
 /** Posición del user en el vault ARGt Prime: shares (balanceOf) valuadas en ARGt (convertToAssets). */
-export function useVaultPosition() {
-  const { address } = useAccount();
+export function useVaultPosition(addressOverride?: `0x${string}`) {
+  const { address: connected } = useAccount();
+  const address = addressOverride ?? connected;
 
   const {
     data: shares,

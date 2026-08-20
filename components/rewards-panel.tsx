@@ -1,249 +1,203 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { usePrivy } from "@privy-io/react-auth";
-import { useQueryClient } from "@tanstack/react-query";
-import { REWARDS_BALANCE_KEY } from "@/lib/hooks/use-rewards-balance";
-import {
-  useAccount,
-  useReadContract,
-  useSwitchChain,
-  useWriteContract,
-} from "wagmi";
-import { arbitrum } from "viem/chains";
-import { formatUnits, parseUnits } from "viem";
+import { useState } from "react";
+import { useAccount, useConfig, useSwitchChain, useWriteContract } from "wagmi";
+import { getPublicClient } from "wagmi/actions";
+import { erc20Abi, formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
-import { TOKENS, CHAIN_IDS } from "@/lib/config/tokens";
-import { DEPOSIT_CHAIN, OMNIBUS_VAULT_ADDRESS } from "@/lib/config/cuenta";
-import { vaultAbi } from "@/lib/hooks/use-vault-position";
-import { VAULT_ARGT_PRIME } from "@/lib/config/tokens";
-import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { CHAIN_IDS, TOKENS, VAULT_ARGT_PRIME } from "@/lib/config/tokens";
+import { useTokenBalances } from "@/lib/hooks/use-token-balances";
+import { useVaultPosition, vaultAbi } from "@/lib/hooks/use-vault-position";
+import { useVaultRewards } from "@/lib/hooks/use-vault-rewards";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import { VerifyRewards } from "@/components/verify-rewards";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Skeleton } from "@/components/ui/skeleton";
-
-const ERC20_TRANSFER_ABI = [
-  {
-    type: "function",
-    name: "transfer",
-    stateMutability: "nonpayable",
-    inputs: [
-      { name: "to", type: "address" },
-      { name: "amount", type: "uint256" },
-    ],
-    outputs: [{ name: "", type: "bool" }],
-  },
-] as const;
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { TxButton, type TxButtonStage } from "@/components/tx-button";
 
 const ERROR_COPY =
   "No pudimos completar la operación. Revisá tu conexión o el saldo disponible y volvé a intentar.";
-const POLL_INTERVAL_MS = 5000;
-const POLL_MAX_ATTEMPTS = 12;
+const MORPHO_VAULT_URL = `https://app.morpho.org/arbitrum/vault/${VAULT_ARGT_PRIME.address}`;
 
-type AccountData = { argtBalance: bigint; interestAccrued: bigint };
 type RewardsAction = "depositar" | "retirar";
-
 const NONE = "none";
 const TAB_TRIGGER =
   "min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
-type DepositStatus =
-  "idle" | "sending" | "confirming" | "acreditado" | "timeout";
 
+const VAULT_CHAIN = VAULT_ARGT_PRIME.chain;
+const VAULT_CHAIN_ID = CHAIN_IDS[VAULT_CHAIN];
+const ARGT_ON_VAULT_CHAIN = TOKENS.ARGt.addresses[VAULT_CHAIN];
+const decimals = TOKENS.ARGt.decimals;
+
+const fmt2 = (v: bigint) =>
+  Number(formatUnits(v, decimals)).toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+// Rewards acumulados con 8 decimales: el yield diario es chico y se quiere ver crecer.
+const fmtFull = (v: bigint) => {
+  const [int, frac = ""] = formatUnits(v, decimals).split(".");
+  return `${int},${frac.slice(0, 8).padEnd(8, "0")}`;
+};
+
+function parseAmount(value: string): bigint | null {
+  try {
+    const n = parseUnits(value, decimals);
+    return n > BigInt(0) ? n : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Rewards = el usuario deposita ARGt directo en el vault ARGt Prime (ERC-4626, Morpho, Arbitrum)
+ * desde su propia wallet. Saldo = convertToAssets(shares); acumulado = saldo − depositado neto.
+ */
 export function RewardsPanel() {
-  const { getAccessToken } = usePrivy();
-  const queryClient = useQueryClient();
+  const config = useConfig();
   const { address, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
-  const { perChain } = useTokenBalances(address);
+  const { perChain, refetch: refetchBalances } = useTokenBalances(address);
+  const position = useVaultPosition(address);
+  const rewards = useVaultRewards(address);
 
-  const [account, setAccount] = useState<AccountData | null>(null);
   const [action, setAction] = useState<RewardsAction | null>(null);
   const actionRef = useRevealAnimation<HTMLDivElement>(action !== null);
-  const [showVerify, setShowVerify] = useState(false);
-  const verifyRef = useRevealAnimation<HTMLDivElement>(showVerify);
-  const [apy, setApy] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Posición del pool omnibus: dato público informativo (convertToAssets es lectura pública,
-  // no expone balances individuales), mismo patrón que use-vault-position.
-  const { data: omnibusValue } = useReadContract({
-    address: VAULT_ARGT_PRIME.address,
-    abi: vaultAbi,
-    functionName: "convertToAssets",
-    args: [BigInt(1) * BigInt(10) ** BigInt(TOKENS.ARGt.decimals)],
-    chainId: arbitrum.id,
-  });
-
-  const loadAccount = useCallback(async () => {
-    const token = await getAccessToken();
-    const [accountRes, rateRes] = await Promise.all([
-      fetch("/api/account/account", {
-        headers: { Authorization: `Bearer ${token}` },
-      }),
-      fetch("/api/account/rate"),
-    ]);
-    if (accountRes.ok) {
-      const data = await accountRes.json();
-      setAccount({
-        argtBalance: BigInt(data.argtBalance),
-        interestAccrued: BigInt(data.interestAccrued),
-      });
-      // El Saldo total de Home lee el mismo ledger vía useRewardsBalance: invalidar para que se actualice.
-      void queryClient.invalidateQueries({ queryKey: REWARDS_BALANCE_KEY });
-    }
-    if (rateRes.ok) {
-      const data = await rateRes.json();
-      setApy(data.apy);
-    }
-    setIsLoading(false);
-  }, [getAccessToken, queryClient]);
-
-  useEffect(() => {
-    loadAccount();
-  }, [loadAccount]);
-
-  const decimals = TOKENS.ARGt.decimals;
-
-  // --- Depositar: transfer ARGt al omnibus + polling de sync-deposits (flujo de account/deposit) ---
   const [depositAmount, setDepositAmount] = useState("");
-  const [depositStatus, setDepositStatus] = useState<DepositStatus>("idle");
-  const balanceOnArbitrum = perChain[DEPOSIT_CHAIN] ?? BigInt(0);
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [depositStage, setDepositStage] = useState<TxButtonStage>("idle");
+  const [depositStep, setDepositStep] = useState<
+    "aprobar" | "depositar" | null
+  >(null);
+  const [withdrawStage, setWithdrawStage] = useState<TxButtonStage>("idle");
 
-  async function pollForCredit(hash: `0x${string}`) {
-    setDepositStatus("confirming");
-    const token = await getAccessToken();
-    for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
-      try {
-        const res = await fetch("/api/account/sync-deposits", {
-          method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        if (res.ok) {
-          const data = await res.json();
-          const movements: { txHash?: string }[] = data.myNewMovements ?? [];
-          if (
-            movements.some(
-              (m) => m.txHash?.toLowerCase() === hash.toLowerCase(),
-            )
-          ) {
-            setDepositStatus("acreditado");
-            await loadAccount();
-            return;
-          }
-        }
-      } catch {
-        // red intermitente, seguimos intentando en el próximo tick
-      }
-    }
-    setDepositStatus("timeout");
+  const saldo = position.valueInArgt;
+  const principal = rewards.data?.principal ?? BigInt(0);
+  const earned = saldo > principal ? saldo - principal : BigInt(0);
+  const apy = rewards.data?.apy ?? null;
+  const sharePrice = rewards.data?.sharePrice;
+  const balanceOnVaultChain = perChain[VAULT_CHAIN] ?? BigInt(0);
+
+  const depositAssets = depositAmount ? parseAmount(depositAmount) : null;
+  const depositError =
+    depositAmount && !depositAssets
+      ? "Ingresá un monto válido."
+      : depositAssets && depositAssets > balanceOnVaultChain
+        ? "El monto supera tu saldo en Arbitrum."
+        : undefined;
+  const withdrawAssets = withdrawAmount ? parseAmount(withdrawAmount) : null;
+  const withdrawError =
+    withdrawAmount && !withdrawAssets
+      ? "Ingresá un monto válido."
+      : withdrawAssets && withdrawAssets > saldo
+        ? "El monto supera tu saldo en Rewards."
+        : undefined;
+
+  const busyDeposit =
+    depositStage === "confirming" || depositStage === "pending";
+  const busyWithdraw =
+    withdrawStage === "confirming" || withdrawStage === "pending";
+
+  async function ensureVaultChain() {
+    if (chainId !== VAULT_CHAIN_ID)
+      await switchChainAsync({ chainId: VAULT_CHAIN_ID });
+  }
+
+  function refreshAll() {
+    position.refetch();
+    void rewards.refetch();
+    void refetchBalances();
   }
 
   async function handleDeposit() {
-    if (!address || !depositAmount) return;
-    let assets: bigint;
+    if (!address || !depositAssets || depositError) return;
+    const client = getPublicClient(config, { chainId: VAULT_CHAIN_ID });
+    if (!client) return;
+    setDepositStage("confirming");
     try {
-      assets = parseUnits(depositAmount, decimals);
-    } catch {
-      return;
-    }
-    if (assets <= BigInt(0) || assets > balanceOnArbitrum) return;
-
-    setDepositStatus("sending");
-    try {
-      if (chainId !== CHAIN_IDS[DEPOSIT_CHAIN]) {
-        await switchChainAsync({ chainId: CHAIN_IDS[DEPOSIT_CHAIN] });
+      await ensureVaultChain();
+      const allowance = await client.readContract({
+        address: ARGT_ON_VAULT_CHAIN,
+        abi: erc20Abi,
+        functionName: "allowance",
+        args: [address, VAULT_ARGT_PRIME.address],
+      });
+      if (allowance < depositAssets) {
+        setDepositStep("aprobar");
+        const approveHash = await writeContractAsync({
+          address: ARGT_ON_VAULT_CHAIN,
+          abi: erc20Abi,
+          functionName: "approve",
+          args: [VAULT_ARGT_PRIME.address, depositAssets],
+          chainId: VAULT_CHAIN_ID,
+        });
+        setDepositStage("pending");
+        await client.waitForTransactionReceipt({ hash: approveHash });
+        setDepositStage("confirming");
       }
+      setDepositStep("depositar");
       const hash = await writeContractAsync({
-        address: TOKENS.ARGt.addresses[DEPOSIT_CHAIN],
-        abi: ERC20_TRANSFER_ABI,
-        functionName: "transfer",
-        args: [OMNIBUS_VAULT_ADDRESS, assets],
-        chainId: CHAIN_IDS[DEPOSIT_CHAIN],
+        address: VAULT_ARGT_PRIME.address,
+        abi: vaultAbi,
+        functionName: "deposit",
+        args: [depositAssets, address],
+        chainId: VAULT_CHAIN_ID,
       });
+      setDepositStage("pending");
+      const receipt = await client.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("deposit reverted");
+      setDepositStage("success");
+      toast.success("Inversión confirmada");
       setDepositAmount("");
-      await pollForCredit(hash);
+      refreshAll();
     } catch (error) {
       console.error(error);
-      toast.error(ERROR_COPY);
-      setDepositStatus("idle");
-    }
-  }
-
-  // --- Retirar: POST /api/account/withdraw (flujo de account/withdraw) ---
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [isWithdrawing, setIsWithdrawing] = useState(false);
-
-  async function handleWithdraw() {
-    if (!withdrawAmount) return;
-    let assets: bigint;
-    try {
-      assets = parseUnits(withdrawAmount, decimals);
-    } catch {
-      return;
-    }
-    if (assets <= BigInt(0) || (account && assets > account.argtBalance))
-      return;
-
-    setIsWithdrawing(true);
-    try {
-      const token = await getAccessToken();
-      const res = await fetch("/api/account/withdraw", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ amount: assets.toString(), chain: "arbitrum" }),
-      });
-      const data = await res.json();
-      if (res.ok && data.status === "sent") {
-        toast.success("Retiro confirmado");
-        setWithdrawAmount("");
-        await loadAccount();
-      } else {
-        toast.error(data.reason ?? ERROR_COPY);
-      }
-    } catch (error) {
-      console.error(error);
+      setDepositStage("error");
       toast.error(ERROR_COPY);
     } finally {
-      setIsWithdrawing(false);
+      setDepositStep(null);
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex w-full flex-col gap-4">
-        <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-24 w-full" />
-      </div>
-    );
+  async function handleWithdraw(all = false) {
+    if (!address) return;
+    if (!all && (!withdrawAssets || withdrawError)) return;
+    const client = getPublicClient(config, { chainId: VAULT_CHAIN_ID });
+    if (!client) return;
+    setWithdrawStage("confirming");
+    try {
+      await ensureVaultChain();
+      // "Retirar todo" redime las shares completas para no dejar polvo por redondeo.
+      const hash = all
+        ? await writeContractAsync({
+            address: VAULT_ARGT_PRIME.address,
+            abi: vaultAbi,
+            functionName: "redeem",
+            args: [position.shares, address, address],
+            chainId: VAULT_CHAIN_ID,
+          })
+        : await writeContractAsync({
+            address: VAULT_ARGT_PRIME.address,
+            abi: vaultAbi,
+            functionName: "withdraw",
+            args: [withdrawAssets!, address, address],
+            chainId: VAULT_CHAIN_ID,
+          });
+      setWithdrawStage("pending");
+      const receipt = await client.waitForTransactionReceipt({ hash });
+      if (receipt.status !== "success") throw new Error("withdraw reverted");
+      setWithdrawStage("success");
+      toast.success("Retiro confirmado");
+      setWithdrawAmount("");
+      refreshAll();
+    } catch (error) {
+      console.error(error);
+      setWithdrawStage("error");
+      toast.error(ERROR_COPY);
+    }
   }
-
-  const isDepositing =
-    depositStatus === "sending" || depositStatus === "confirming";
-  // Saldo con 2 decimales; los rewards acumulados con 8, el yield diario es chico y se quiere ver.
-  const fmt2 = (v: bigint) =>
-    Number(formatUnits(v, decimals)).toLocaleString("es-AR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  const fmtFull = (v: bigint) => {
-    const [int, frac = ""] = formatUnits(v, decimals).split(".");
-    return `${int}.${frac.padEnd(8, "0")}`;
-  };
-  const saldo = account?.argtBalance ?? BigInt(0);
-  const rewards = account?.interestAccrued ?? BigInt(0);
-  const rate =
-    omnibusValue !== undefined
-      ? Number(formatUnits(omnibusValue, decimals)).toFixed(4)
-      : null;
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -266,12 +220,12 @@ export function RewardsPanel() {
           className="mt-1 text-[28px] font-serif leading-tight tracking-tight text-gold tabular-nums"
           style={{ minWidth: "8ch" }}
         >
-          {fmt2(saldo)} {TOKENS.ARGt.symbol}
+          {position.isLoading ? "…" : `${fmt2(saldo)} ${TOKENS.ARGt.symbol}`}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Rewards acumulados{" "}
           <span className="font-semibold text-green tabular-nums">
-            +{fmtFull(rewards)} {TOKENS.ARGt.symbol}
+            +{fmtFull(earned)} {TOKENS.ARGt.symbol}
           </span>
         </p>
 
@@ -305,35 +259,41 @@ export function RewardsPanel() {
                 placeholder="Monto en ARGt"
                 value={depositAmount}
                 onChange={(event) => setDepositAmount(event.target.value)}
-                disabled={isDepositing}
+                disabled={busyDeposit}
                 className="min-h-11"
               />
               <p className="text-sm text-muted-foreground">
-                Disponible:{" "}
+                Disponible en Arbitrum:{" "}
                 <span className="tabular-nums">
-                  {formatUnits(balanceOnArbitrum, decimals)}
+                  {fmt2(balanceOnVaultChain)}
                 </span>{" "}
                 {TOKENS.ARGt.symbol}
               </p>
-              <Button
+              {depositError && (
+                <p className="text-sm text-destructive">{depositError}</p>
+              )}
+              <TxButton
+                label={
+                  depositStep === "aprobar"
+                    ? "Aprobando ARGt…"
+                    : depositStep === "depositar"
+                      ? "Depositando…"
+                      : "Depositar"
+                }
+                stage={depositStage}
+                disabled={
+                  !address ||
+                  busyDeposit ||
+                  !depositAssets ||
+                  Boolean(depositError)
+                }
                 onClick={handleDeposit}
-                disabled={!address || isDepositing || !depositAmount}
-              >
-                {depositStatus === "sending" && "Enviando..."}
-                {depositStatus === "confirming" && "Confirmando..."}
-                {(depositStatus === "idle" ||
-                  depositStatus === "acreditado" ||
-                  depositStatus === "timeout") &&
-                  "Depositar"}
-              </Button>
-              {depositStatus === "acreditado" && (
-                <p className="text-sm text-green">Acreditado</p>
-              )}
-              {depositStatus === "timeout" && (
-                <p className="text-sm text-muted-foreground">
-                  Puede tardar unos minutos, va a aparecer arriba.
-                </p>
-              )}
+                onSettled={() => setDepositStage("idle")}
+              />
+              <p className="text-xs text-muted-foreground">
+                Dos firmas la primera vez: una autoriza al vault a tomar tus
+                ARGt, la otra deposita.
+              </p>
             </div>
           </TabsContent>
 
@@ -349,44 +309,60 @@ export function RewardsPanel() {
                 placeholder="Monto en ARGt"
                 value={withdrawAmount}
                 onChange={(event) => setWithdrawAmount(event.target.value)}
-                disabled={isWithdrawing}
+                disabled={busyWithdraw}
                 className="min-h-11"
               />
-              <Button
-                onClick={handleWithdraw}
-                disabled={isWithdrawing || !withdrawAmount}
-              >
-                {isWithdrawing ? "Retirando..." : "Retirar"}
-              </Button>
+              {withdrawError && (
+                <p className="text-sm text-destructive">{withdrawError}</p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                <TxButton
+                  label="Retirar"
+                  stage={withdrawStage}
+                  disabled={
+                    !address ||
+                    busyWithdraw ||
+                    !withdrawAssets ||
+                    Boolean(withdrawError)
+                  }
+                  onClick={() => handleWithdraw(false)}
+                  onSettled={() => setWithdrawStage("idle")}
+                />
+                <Button
+                  variant="outline"
+                  disabled={
+                    !address || busyWithdraw || position.shares === BigInt(0)
+                  }
+                  onClick={() => handleWithdraw(true)}
+                >
+                  Retirar todo
+                </Button>
+              </div>
             </div>
           </TabsContent>
         </Tabs>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-          {rate !== null ? (
+          {sharePrice !== undefined ? (
             <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
               1 ARGt <span aria-hidden="true">&rarr;</span>{" "}
-              <span className="tabular-nums normal-case">{rate}</span> ARGt en
-              Morpho
+              <span className="tabular-nums normal-case">
+                {Number(formatUnits(sharePrice, decimals)).toFixed(4)}
+              </span>{" "}
+              ARGt en Morpho
             </p>
           ) : (
             <span />
           )}
-          <button
-            type="button"
-            aria-expanded={showVerify}
-            onClick={() => setShowVerify((v) => !v)}
-            className="min-h-11 text-sm text-gold underline-offset-4 hover:underline"
+          <a
+            href={MORPHO_VAULT_URL}
+            target="_blank"
+            rel="noreferrer"
+            className="min-h-11 text-sm leading-[44px] text-gold underline-offset-4 hover:underline"
           >
-            {showVerify ? "Ocultar verificación" : "Verificar mis rewards"}
-          </button>
+            Ver en Morpho
+          </a>
         </div>
-
-        {showVerify && (
-          <div ref={verifyRef} className="mt-3 border-t border-border pt-4">
-            <VerifyRewards />
-          </div>
-        )}
       </div>
     </div>
   );

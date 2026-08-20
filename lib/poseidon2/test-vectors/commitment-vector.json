@@ -1,7 +1,0 @@
-{
-  "balances": ["1000000000000000000"],
-  "salt": "424242",
-  "expected": "0x181ab30b6db964295ad2ee45b662e8ba112af8a441f276b7e1e351108b9cf5cf",
-  "domain": "user_commitment",
-  "note": "generado con nargo test --show-output sobre commitment_lib real, no inventado"
-}

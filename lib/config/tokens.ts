@@ -87,22 +87,3 @@ export const BRIDGE_ADAPTERS: Partial<Record<ChainKey, `0x${string}`>> = {
   polygon: "0xD70ad085684b2A9f4B5d54D7BDB2ecA37a273216",
 };
 export const BRIDGE_CHAINS = CHAINS.filter((c) => Boolean(BRIDGE_ADAPTERS[c]));
-
-// FaroYieldRegistry (procedencia del yield). Fallback = deployments.json (raíz del repo),
-// override por env NEXT_PUBLIC_REGISTRY_1_*.
-export const REGISTRIES: {
-  label: string;
-  address: `0x${string}`;
-  chainId: number;
-  /** Bloque de deploy del registry (tx en deployments.json): fromBlock real de useCutHistory,
-   * evita escanear desde el bloque 0 en cada carga. */
-  deployBlock: bigint;
-}[] = [
-  {
-    label: process.env.NEXT_PUBLIC_REGISTRY_1_LABEL ?? "Rendimiento (yield)",
-    address: (process.env.NEXT_PUBLIC_REGISTRY_1_ADDRESS ??
-      "0x06282d1a04be98f400387f3965704f8846d7fefb") as `0x${string}`,
-    chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_1_CHAIN_ID ?? 42161),
-    deployBlock: BigInt(process.env.NEXT_PUBLIC_REGISTRY_1_DEPLOY_BLOCK ?? 496520325),
-  },
-];

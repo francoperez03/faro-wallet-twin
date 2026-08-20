@@ -2,7 +2,6 @@
 
 import { useId, useState } from "react";
 import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
-import { OMNIBUS_VAULT_ADDRESS } from "@/lib/config/cuenta";
 import { formatUnits } from "viem";
 import {
   CHAINS,
@@ -10,6 +9,7 @@ import {
   EXPLORER_TX_URL,
   TOKENS,
   TOKEN_KEYS,
+  VAULT_ARGT_PRIME,
   type ChainKey,
   type TokenKey,
 } from "@/lib/config/tokens";
@@ -174,10 +174,10 @@ export function ActivityCard({
           <ul className="divide-y divide-border">
             {entries.map((entry) => {
               const sent = entry.direction === "sent";
-              // Movimientos contra la bóveda de Rewards se muestran como inversión / retiro.
+              // Movimientos contra el vault ARGt Prime se muestran como inversión / retiro de Rewards.
               const rewards =
                 entry.counterparty.toLowerCase() ===
-                OMNIBUS_VAULT_ADDRESS.toLowerCase();
+                VAULT_ARGT_PRIME.address.toLowerCase();
               const Icon = rewards
                 ? TrendingUp
                 : sent
@@ -223,7 +223,7 @@ export function ActivityCard({
                       className="font-mono text-xs text-muted-foreground underline-offset-2 hover:text-gold hover:underline"
                     >
                       {rewards
-                        ? "Bóveda de Rewards"
+                        ? "Vault ARGt Prime"
                         : `${sent ? "a" : "de"} ${truncateAddress(entry.counterparty)}`}
                       {entry.timestamp
                         ? ` · ${formatWhen(entry.timestamp)}`

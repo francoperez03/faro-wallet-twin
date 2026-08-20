@@ -22,7 +22,7 @@ import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
-import { useRewardsBalance } from "@/lib/hooks/use-rewards-balance";
+import { useVaultPosition } from "@/lib/hooks/use-vault-position";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
 import { cn } from "@/lib/utils";
@@ -60,12 +60,11 @@ export default function HomePage() {
     isLoading: isLoadingWallet,
     refetch,
   } = balances;
-  // Saldo total = wallet en todas las redes + lo invertido en Rewards (ledger, solo ARGt).
-  const rewards = useRewardsBalance();
-  const invested =
-    token === "ARGt" ? (rewards.data?.total ?? BigInt(0)) : BigInt(0);
+  // Saldo total = wallet en todas las redes + lo invertido en Rewards (vault ARGt Prime, solo ARGt).
+  const vault = useVaultPosition(walletAddress);
+  const invested = token === "ARGt" ? vault.valueInArgt : BigInt(0);
   const total = walletTotal + invested;
-  const isLoading = isLoadingWallet || (token === "ARGt" && rewards.isLoading);
+  const isLoading = isLoadingWallet || (token === "ARGt" && vault.isLoading);
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -385,7 +384,9 @@ export default function HomePage() {
                         onClick={() => setShowBreakdown((v) => !v)}
                         className="flex min-h-11 w-full items-center justify-between text-left"
                       >
-                        <span className="text-sm font-semibold text-foreground">Por red</span>
+                        <span className="text-sm font-semibold text-foreground">
+                          Por red
+                        </span>
                         <ChevronDown
                           aria-hidden="true"
                           className={`size-5 text-gold transition-transform duration-300 ${showBreakdown ? "rotate-180" : ""}`}
@@ -394,7 +395,10 @@ export default function HomePage() {
                       {showBreakdown && (
                         <div ref={breakdownRef} className="pb-2">
                           {token === "ARGt" ? (
-                            <RebalancePanel walletAddress={walletAddress} balances={balances} />
+                            <RebalancePanel
+                              walletAddress={walletAddress}
+                              balances={balances}
+                            />
                           ) : (
                             <BalanceList
                               perChain={perChain}

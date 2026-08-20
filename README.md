@@ -16,7 +16,7 @@ Sign in with email or Google. A wallet is created for you on first sign-in, no s
 - **Send** any supported token on any supported network. The app switches chains for you and confirms the transfer on-chain.
 - **Receive** with your wallet address, ready to copy.
 - **Activity**: one history of every transfer, all currencies and networks interleaved and sorted by time. Filter by currency, by network, or both; each entry links to the block explorer.
-- **Rewards**: deposit ARGt into the ARGt Prime vault on Arbitrum (Morpho, ERC-4626), see your position valued in ARGt, redeem.
+- **Rewards**: deposit ARGt straight from your wallet into the ARGt Prime vault on Arbitrum (Morpho, ERC-4626). Your balance, what you have earned and the current APY are read from the vault itself; withdraw part or all at any time.
 - **Move between networks**: bridge ARGt between Arbitrum, Base and Polygon through Twin's adapters. The fee is quoted on-chain before you confirm, and the app watches the destination until the funds arrive. A rebalance planner turns a target split across networks into the minimum set of bridge legs.
 
 ## Stack
@@ -45,7 +45,7 @@ cp .env.example .env.local   # set NEXT_PUBLIC_PRIVY_APP_ID
 npm run dev                  # http://localhost:3000
 ```
 
-A Privy App ID from [dashboard.privy.io](https://dashboard.privy.io) is the only required setting. The rest of [`.env.example`](.env.example) is optional (custom RPC endpoints) or belongs to server-side features that are not part of the wallet flow.
+A Privy App ID from [dashboard.privy.io](https://dashboard.privy.io) is the only required setting. The rest of [`.env.example`](.env.example) is optional: custom RPC endpoints.
 
 ```bash
 npm run lint
