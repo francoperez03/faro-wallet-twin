@@ -395,10 +395,23 @@ export default function HomePage() {
                       {showBreakdown && (
                         <div ref={breakdownRef} className="pb-2">
                           {token === "ARGt" ? (
-                            <RebalancePanel
-                              walletAddress={walletAddress}
-                              balances={balances}
-                            />
+                            <>
+                              <RebalancePanel
+                                walletAddress={walletAddress}
+                                balances={balances}
+                              />
+                              {TOKENS.ARGt.addresses.ethereum && (
+                                <div className="flex min-h-11 items-center justify-between border-t border-border">
+                                  {/* Ethereum no tiene adapter de bridge: fila informativa, sin barra ni objetivo. */}
+                                  <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                                    Ethereum
+                                  </span>
+                                  <span className="tabular-nums text-sm text-foreground">
+                                    {fmt(perChain.ethereum ?? BigInt(0), decimals)} {symbol}
+                                  </span>
+                                </div>
+                              )}
+                            </>
                           ) : (
                             <BalanceList
                               perChain={perChain}
