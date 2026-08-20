@@ -6,19 +6,21 @@ import { Home, Send, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-reac
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
 import { useCuentaMode } from "@/lib/hooks/use-cuenta-mode";
+import { HIDDEN_SECTIONS } from "@/lib/config/app";
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { mode } = useCuentaMode();
   const homeHref = mode === "cuenta" ? "/cuenta" : "/home";
 
+  // id: sección de la prioridad de sacrificio de D-12 ('m1' -> Home nunca se oculta).
   const TABS = [
-    { href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home },
-    { href: "/enviar", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send },
-    { href: "/rendimiento", label: "Rendimiento", ariaLabel: "Ir a Rendimiento", icon: TrendingUp },
-    { href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight },
-    { href: "/actividad", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered },
-  ];
+    { id: "m1", href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home },
+    { id: "m1", href: "/enviar", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send },
+    { id: "vault", href: "/rendimiento", label: "Rendimiento", ariaLabel: "Ir a Rendimiento", icon: TrendingUp },
+    { id: "bridge", href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight },
+    { id: "m1", href: "/actividad", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered },
+  ].filter((tab) => !HIDDEN_SECTIONS.includes(tab.id));
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
