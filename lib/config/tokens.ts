@@ -15,7 +15,8 @@ export const RPC_URLS: Record<ChainKey, string> = {
     process.env.NEXT_PUBLIC_RPC_ARBITRUM || "https://arb1.arbitrum.io/rpc",
   base: process.env.NEXT_PUBLIC_RPC_BASE || "https://mainnet.base.org",
   polygon:
-    process.env.NEXT_PUBLIC_RPC_POLYGON || "https://polygon.drpc.org",
+    process.env.NEXT_PUBLIC_RPC_POLYGON ||
+    "https://polygon-bor-rpc.publicnode.com",
   ethereum: process.env.NEXT_PUBLIC_RPC_ETHEREUM || "https://eth.drpc.org",
 };
 
