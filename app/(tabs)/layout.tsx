@@ -2,29 +2,33 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { usePrivy } from "@privy-io/react-auth";
 import { Home, Send, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "@/components/mode-toggle";
-import { DisclosureFooter } from "@/components/disclosure-footer";
 import { useCuentaMode } from "@/lib/hooks/use-cuenta-mode";
 import { HIDDEN_SECTIONS, PRODUCT_NAME } from "@/lib/config/app";
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { mode } = useCuentaMode();
-  const homeHref = mode === "cuenta" ? "/cuenta" : "/home";
+  const { authenticated } = usePrivy();
+  const homeHref = mode === "cuenta" ? "/account" : "/home";
 
   // id: sección de la prioridad de sacrificio de D-12 ('m1' -> Home nunca se oculta).
   const TABS = [
     { id: "m1", href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home, section: "cuenta" },
-    { id: "m1", href: "/enviar", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send, section: "wallet" },
-    { id: "vault", href: "/rendimiento", label: "Rendimiento", ariaLabel: "Ir a Rendimiento", icon: TrendingUp, section: "wallet" },
+    { id: "m1", href: "/send", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send, section: "wallet" },
+    { id: "vault", href: "/rewards", label: "Rewards", ariaLabel: "Ir a Rewards", icon: TrendingUp, section: "wallet" },
     { id: "bridge", href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight, section: "wallet" },
-    { id: "m1", href: "/actividad", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered, section: "wallet" },
-  ].filter((tab) => !HIDDEN_SECTIONS.includes(tab.id));
+    { id: "m1", href: "/activity", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered, section: "wallet" },
+  ]
+    .filter((tab) => !HIDDEN_SECTIONS.includes(tab.id))
+    // Sin sesión solo Home queda navegable; el resto se muestra deshabilitado.
+    .map((tab) => ({ ...tab, disabled: !authenticated && tab.href !== homeHref }));
 
   const isActive = (href: string) =>
-    href === homeHref ? pathname === "/home" || pathname === "/cuenta" : pathname === href;
+    href === homeHref ? pathname === "/home" || pathname === "/account" : pathname === href;
 
   const crumb = pathname.replace(/^\//, "").replace(/\//g, " / ") || "home";
 
@@ -42,7 +46,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
             Overview
           </p>
           <ul>
-            {TABS.map(({ href, label, ariaLabel, icon: Icon }) => {
+            {TABS.map(({ href, label, ariaLabel, icon: Icon, disabled }) => {
               const active = isActive(href);
               return (
                 <li key={href}>
@@ -50,8 +54,11 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
                     href={href}
                     aria-label={ariaLabel}
                     aria-current={active ? "page" : undefined}
+                    aria-disabled={disabled || undefined}
+                    tabIndex={disabled ? -1 : undefined}
                     className={cn(
                       "flex min-h-11 items-center gap-3 px-5 text-sm",
+                      disabled && "pointer-events-none opacity-40",
                       active
                         ? "bg-gold-dim text-gold"
                         : "text-muted-foreground hover:text-foreground"
@@ -67,12 +74,7 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
         </nav>
         <div className="border-t border-border p-4">
           <ModeToggle />
-          <p className="pt-3 text-center font-mono text-[11px] text-muted-foreground">
-            <Link href="/disclosure" className="underline hover:text-gold">
-              disclosure
-            </Link>{" "}
-            · v1.0
-          </p>
+          <p className="pt-3 text-center font-mono text-[11px] text-muted-foreground">v1.0</p>
         </div>
       </aside>
 
@@ -92,12 +94,11 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
         </div>
 
         <main className="flex-1 pb-16 lg:pb-0">{children}</main>
-        <DisclosureFooter className="mb-16 lg:mb-0" />
 
         {/* Tab bar mobile */}
         <nav className="fixed inset-x-0 bottom-0 z-20 border-t border-border bg-card lg:hidden">
           <ul className="flex">
-            {TABS.map(({ href, label, ariaLabel, icon: Icon }) => {
+            {TABS.map(({ href, label, ariaLabel, icon: Icon, disabled }) => {
               const active = isActive(href);
               return (
                 <li key={href} className="flex-1">
@@ -105,8 +106,11 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
                     href={href}
                     aria-label={ariaLabel}
                     aria-current={active ? "page" : undefined}
+                    aria-disabled={disabled || undefined}
+                    tabIndex={disabled ? -1 : undefined}
                     className={cn(
                       "flex min-h-11 min-w-11 flex-col items-center justify-center gap-1 border-t-2 py-1 text-xs",
+                      disabled && "pointer-events-none opacity-40",
                       active
                         ? "border-gold font-semibold text-gold"
                         : "border-transparent text-muted-foreground"

@@ -8,7 +8,7 @@ const BN254_FR = BigInt(
 /**
  * D-07: salt = HKDF-SHA256(SOBRECITO_MASTER_HEX, did), reducido al field de Poseidon2.
  * Server-only (usa SOBRECITO_MASTER_HEX, jamás expuesto al browser). Compartido entre
- * app/api/cuenta/opening (Plan 02) y lib/sobrecito-mini/prove (Plan 03): mismo salt para
+ * app/api/account/opening (Plan 02) y lib/sobrecito-mini/prove (Plan 03): mismo salt para
  * el mismo DID, determinístico, así que un corte real puede reusar el mismo derive.
  */
 export function deriveSalt(did: string): bigint {

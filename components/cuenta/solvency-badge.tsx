@@ -32,7 +32,7 @@ export function SolvencyBadge() {
         </Badge>
       )}
       <Button asChild variant="link" className="h-auto w-fit p-0 text-gold">
-        <Link href="/cuenta/verificar">Verificá tu inclusión</Link>
+        <Link href="/account/verify">Verificá tu inclusión</Link>
       </Button>
     </div>
   );
