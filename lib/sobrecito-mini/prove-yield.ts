@@ -30,6 +30,11 @@ const BN254_FR = BigInt(
   "21888242871839275222246405745257275088548364400416034343698204186575808495617",
 );
 
+// Mismo BAL_SCALE que lib/sobrecito-mini/prove.ts (D-01 del mini): el circuito rangea a
+// BAL_BITS=48, los base units 1e18 no entran. balance_i/reward_i/delta (y cR publicado)
+// van en esta escala truncada a 8 decimales, NUNCA en wei crudo.
+const BAL_SCALE = BigInt(10) ** BigInt(10);
+
 // Registry #3 (pivote de yield), configurado por lib/config/tokens.ts (REGISTRIES[2]).
 function getYieldRegistry() {
   const registry = REGISTRIES[2];
@@ -46,6 +51,7 @@ function getPublisherAccount() {
 export type YieldCutResult = {
   corteId: Hex;
   cL: Hex;
+  /** En BAL_SCALE (1e10), igual que cR publicado y publicInputs[2] — no wei crudo. */
   delta: bigint;
   txHash: Hex;
   usersIncluded: number;
@@ -65,11 +71,18 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
     throw new Error(`ledger tiene ${result.entries.length} usuarios, el circuito de yield soporta K=${K}`);
   }
 
+  // Escala a BAL_SCALE (1e10, 8 decimales): el circuito, el commitment y cR/publicInputs[2]
+  // trabajan TODOS en esta escala, jamas en wei crudo (18 decimales, no entra en BAL_BITS=48).
+  const deltaScaled = result.delta / BAL_SCALE;
+  if (deltaScaled <= BigInt(0)) return null; // delta<1e10 wei de yield, nada que probar tras truncar
+
   type UserRow = { userId: string; balance: bigint; reward: bigint; salt: bigint; commitment: bigint };
   const users: UserRow[] = result.entries.map((e) => {
+    const balance = e.balance / BAL_SCALE;
+    const reward = e.reward / BAL_SCALE;
     const salt = deriveSalt(e.userId);
-    const commitment = recomputeCommitment([e.balance, e.reward], salt);
-    return { userId: e.userId, balance: e.balance, reward: e.reward, salt, commitment };
+    const commitment = recomputeCommitment([balance, reward], salt);
+    return { userId: e.userId, balance, reward, salt, commitment };
   });
 
   // Inputs del circuito: usuarios reales primero, padding con balance/reward/salt=0 hasta K.
@@ -89,7 +102,7 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
     users: circuitUsers,
     r: r.toString(),
     key_hash: KEY_HASH,
-    delta: result.delta.toString(),
+    delta: deltaScaled.toString(),
   });
   const [cLWitness, deltaWitness] = returnValue as [Hex, Hex];
 
@@ -113,7 +126,7 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
   if (!cL || BigInt(cL) !== BigInt(cLWitness)) {
     throw new Error("C_L de la proof no coincide con el returnValue del witness (bug)");
   }
-  if (!deltaOut || BigInt(deltaOut) !== BigInt(deltaWitness) || BigInt(deltaOut) !== result.delta) {
+  if (!deltaOut || BigInt(deltaOut) !== BigInt(deltaWitness) || BigInt(deltaOut) !== deltaScaled) {
     throw new Error("delta de la proof no coincide con el delta acreditado (bug)");
   }
 
@@ -124,12 +137,14 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
   const account = getPublisherAccount();
   const walletClient = createWalletClient({ account, chain: arbitrum, transport: http(RPC_URLS.arbitrum) });
 
-  // cR = delta (PROBADO en esta version, publicInputs[2] == cR, ver contracts-yield/src/FaroYieldRegistry.sol).
+  // cR = delta EN BAL_SCALE (PROBADO en esta version, publicInputs[2] == cR == deltaScaled,
+  // ver contracts-yield/src/FaroYieldRegistry.sol) — NUNCA wei crudo: /status y su recompute
+  // de Δ vault asumen esta misma escala (pin de interfaz con la vision publica de la UX).
   // verdicts/coverageBps/attestationHash: DECLARADOS, mismo criterio que lib/sobrecito-mini/prove.ts.
   const cutInput = {
     corteId,
     cL,
-    cR: toHex(result.delta, { size: 32 }),
+    cR: toHex(deltaScaled, { size: 32 }),
     blockB: result.blockB2,
     verdicts: [1] as const, // ARGt: cubierto (declarado)
     coverageBps: [10000] as const, // un bucket, 100% (declarado)
@@ -169,7 +184,7 @@ export async function runYieldCut(result: AccrueInterestResult): Promise<YieldCu
     `;
   }
 
-  return { corteId, cL, delta: result.delta, txHash, usersIncluded: users.length };
+  return { corteId, cL, delta: deltaScaled, txHash, usersIncluded: users.length };
 }
 
 export type InterestAndYieldCutResult = {
