@@ -7,15 +7,21 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { CHAINS, CHAIN_LABELS, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ChainPicker } from "@/components/chain-picker";
+import { RebalancePanel } from "@/components/rebalance-panel";
+import { BRIDGE_CHAINS, TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useBridge, type BridgeStatus } from "@/lib/hooks/use-bridge";
 import { cn } from "@/lib/utils";
+
+const QUOTE_DEBOUNCE_MS = 400;
 
 const NATIVE_SYMBOL: Record<ChainKey, string> = {
   arbitrum: "ETH",
   base: "ETH",
   polygon: "POL",
+  ethereum: "ETH",
 };
 
 const TX_ERROR =
@@ -42,7 +48,47 @@ const STATUS_PILL: Partial<Record<BridgeStatus, { label: string; className: stri
 export default function BridgePage() {
   const { user } = usePrivy();
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
-  const { perChain, refetch } = useTokenBalances(walletAddress);
+  const balances = useTokenBalances(walletAddress);
+  const { perChain, refetch } = balances;
+
+  return (
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <h1 className="font-serif text-3xl text-foreground">Redes</h1>
+      </div>
+      <Tabs defaultValue="mover">
+        <TabsList className="w-full">
+          <TabsTrigger value="mover" className="flex-1">
+            Mover
+          </TabsTrigger>
+          <TabsTrigger value="rebalanceo" className="flex-1">
+            Rebalanceo
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="mover" className="pt-4">
+          <MoverPanel
+            walletAddress={walletAddress}
+            perChain={perChain}
+            refetch={refetch}
+          />
+        </TabsContent>
+        <TabsContent value="rebalanceo" className="pt-4">
+          <RebalancePanel walletAddress={walletAddress} balances={balances} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function MoverPanel({
+  walletAddress,
+  perChain,
+  refetch,
+}: {
+  walletAddress: `0x${string}` | undefined;
+  perChain: Record<ChainKey, bigint>;
+  refetch: () => void | Promise<unknown>;
+}) {
   const { status, error, quoteFee, bridge } = useBridge();
 
   const [fromChain, setFromChain] = useState<ChainKey>("arbitrum");
@@ -70,22 +116,26 @@ export default function BridgePage() {
     }
   }
 
-  // Cotiza el fee cada vez que cambia monto/red; D-09: siempre leído on-chain (quoteSend),
-  // nunca hardcodeado. Se muestra antes de confirmar (UI-SPEC).
+  // Cotiza el fee cada vez que cambia monto/red, con debounce (~400ms) para no disparar una
+  // lectura on-chain por cada tecla; D-09: siempre leído on-chain (quoteSend), nunca
+  // hardcodeado. Se muestra antes de confirmar (UI-SPEC).
   useEffect(() => {
     let cancelled = false;
     setFee(null);
     setFeeError(null);
     if (!walletAddress || !amountBigInt || amountError) return;
-    quoteFee(fromChain, toChain, amountBigInt)
-      .then(({ fee: quoted }) => {
-        if (!cancelled) setFee(quoted.nativeFee);
-      })
-      .catch(() => {
-        if (!cancelled) setFeeError("No pudimos cotizar el fee. Probá de nuevo.");
-      });
+    const timer = setTimeout(() => {
+      quoteFee(fromChain, toChain, amountBigInt)
+        .then(({ fee: quoted }) => {
+          if (!cancelled) setFee(quoted.nativeFee);
+        })
+        .catch(() => {
+          if (!cancelled) setFeeError("No pudimos cotizar el fee. Probá de nuevo.");
+        });
+    }, QUOTE_DEBOUNCE_MS);
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [walletAddress, fromChain, toChain, amount]);
@@ -116,42 +166,23 @@ export default function BridgePage() {
   }
 
   const pill = STATUS_PILL[status];
-  const destChains = CHAINS.filter((c) => c !== fromChain);
+  const destChains = BRIDGE_CHAINS.filter((c) => c !== fromChain);
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
-      <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / BRIDGE
-        </p>
-        <h1 className="font-serif text-3xl text-foreground">Mover entre redes</h1>
-      </div>
-
+    <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">Desde</span>
-        <div className="flex gap-2">
-          {CHAINS.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => {
-                setFromChain(c);
-                if (toChain === c) {
-                  const fallback = CHAINS.find((other) => other !== c);
-                  if (fallback) setToChain(fallback);
-                }
-              }}
-              className={cn(
-                "min-h-11 flex-1 rounded-md border text-sm",
-                fromChain === c
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground"
-              )}
-            >
-              {CHAIN_LABELS[c]}
-            </button>
-          ))}
-        </div>
+        <ChainPicker
+          chains={BRIDGE_CHAINS}
+          value={fromChain}
+          onChange={(c) => {
+            setFromChain(c);
+            if (toChain === c) {
+              const fallback = BRIDGE_CHAINS.find((other) => other !== c);
+              if (fallback) setToChain(fallback);
+            }
+          }}
+        />
         <p className="text-sm text-muted-foreground">
           Disponible: <span className="tabular-nums">{formatUnits(balanceOnChain, decimals)}</span>{" "}
           {TOKENS.ARGt.symbol}
@@ -160,23 +191,7 @@ export default function BridgePage() {
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">Hacia</span>
-        <div className="flex gap-2">
-          {destChains.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setToChain(c)}
-              className={cn(
-                "min-h-11 flex-1 rounded-md border text-sm",
-                toChain === c
-                  ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground"
-              )}
-            >
-              {CHAIN_LABELS[c]}
-            </button>
-          ))}
-        </div>
+        <ChainPicker chains={destChains} value={toChain} onChange={setToChain} />
       </div>
 
       <div className="flex flex-col gap-2">
