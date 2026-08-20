@@ -274,32 +274,33 @@ export function RebalancePanel({
           const targetPct = pct(targets[chain], total);
           const isEdited = Boolean(editedText[chain]);
           return (
-            <div key={chain} className="relative border-b border-border py-2 last:border-b-0">
-              <div
-                className={cn(
-                  "absolute inset-y-0 left-0 transition-[width] duration-300 motion-reduce:transition-none",
-                  isEdited ? "bg-green-dim" : "bg-gold-dim"
-                )}
-                style={{ width: `${targetPct}%` }}
-                aria-hidden="true"
-              />
-              <div className="relative flex min-h-11 w-full items-center justify-between">
+            <div key={chain} className="border-b border-border py-1.5 last:border-b-0">
+              <div className="flex min-h-11 w-full items-center justify-between gap-3">
                 <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                   {CHAIN_LABELS[chain]}
                 </span>
-                <span className="tabular-nums text-base text-foreground">
-                  {formatUnits(current[chain], decimals)} {TOKENS.ARGt.symbol}
+                <span className="flex items-center gap-2">
+                  <span className="tabular-nums text-sm text-foreground">
+                    {formatUnits(current[chain], decimals)} {TOKENS.ARGt.symbol}
+                  </span>
+                  <input
+                    value={editedText[chain] ?? ""}
+                    onChange={(e) => setChainText(chain, e.target.value)}
+                    disabled={executing}
+                    inputMode="decimal"
+                    placeholder={formatUnits(current[chain], decimals)}
+                    aria-label={`Objetivo en ${CHAIN_LABELS[chain]}`}
+                    className="h-9 w-24 rounded-md border border-border bg-card px-2 text-right font-mono text-xs tabular-nums text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring disabled:opacity-50"
+                  />
                 </span>
               </div>
-              <div className="relative flex justify-end pb-1">
-                <input
-                  value={editedText[chain] ?? ""}
-                  onChange={(e) => setChainText(chain, e.target.value)}
-                  disabled={executing}
-                  inputMode="decimal"
-                  placeholder={formatUnits(current[chain], decimals)}
-                  aria-label={`Objetivo en ${CHAIN_LABELS[chain]}`}
-                  className="min-h-11 w-40 rounded-md border border-border bg-card px-2 text-right font-mono text-sm tabular-nums text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-ring disabled:opacity-50"
+              <div className="mb-1 h-1 overflow-hidden rounded-full bg-secondary" aria-hidden="true">
+                <div
+                  className={cn(
+                    "h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none",
+                    isEdited ? "bg-green" : "bg-gold"
+                  )}
+                  style={{ width: `${targetPct}%` }}
                 />
               </div>
             </div>
@@ -314,7 +315,9 @@ export function RebalancePanel({
           type="button"
           disabled={executing}
           onClick={() => {
-            const share = total / BigInt(BRIDGE_CHAINS.length);
+            // Corte a 2 decimales para que el input quede legible; el resto exacto va a la primera red.
+            const centUnit = BigInt(10) ** BigInt(decimals - 2);
+            const share = (total / BigInt(BRIDGE_CHAINS.length) / centUnit) * centUnit;
             const rest = total - share * BigInt(BRIDGE_CHAINS.length);
             applyPreset(
               "equal",
@@ -324,7 +327,7 @@ export function RebalancePanel({
               )
             );
           }}
-          className="min-h-11 flex-1 rounded-md border border-border bg-card px-3 text-sm text-foreground disabled:opacity-50"
+          className="min-h-11 flex-1 rounded-md border border-border bg-card px-2 text-xs text-foreground disabled:opacity-50"
         >
           Partes iguales
         </button>
@@ -342,7 +345,7 @@ export function RebalancePanel({
                 )
               )
             }
-            className="min-h-11 flex-1 rounded-md border border-border bg-card px-3 text-sm text-foreground disabled:opacity-50"
+            className="min-h-11 flex-1 rounded-md border border-border bg-card px-2 text-xs text-foreground disabled:opacity-50"
           >
             Todo en {CHAIN_LABELS[chain]}
           </button>
