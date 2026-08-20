@@ -1,0 +1,7 @@
+[package]
+name = "yield_cut"
+type = "bin"
+authors = [""]
+
+[dependencies]
+commitment_lib = { path = "/Users/francoperez/repos/job/Sobre/sobrecito/circuits/commitment_lib" }
