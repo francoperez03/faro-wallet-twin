@@ -17,8 +17,14 @@ const TRANSFER_EVENT = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",
 );
 
-// ponytail: ~5000 bloques recientes por red, sin indexer. Ajustar si el RPC público limita el rango.
-const BLOCK_RANGE = BigInt(5000);
+// ponytail: ~24 h de historia por red (bloques/día aproximados), sin indexer. Si el RPC
+// público rechaza el rango, se reintenta con ventanas más chicas (÷4, ÷16).
+const BLOCK_RANGE: Record<ChainKey, bigint> = {
+  arbitrum: BigInt(350000),
+  base: BigInt(45000),
+  polygon: BigInt(45000),
+  ethereum: BigInt(7500),
+};
 
 export type ActivityEntry = {
   hash: `0x${string}`;
@@ -51,11 +57,12 @@ export function useActivity(address: `0x${string}` | undefined) {
           if (!client) return [];
           try {
             const latest = await client.getBlockNumber();
-            const fromBlock =
-              latest > BLOCK_RANGE ? latest - BLOCK_RANGE : BigInt(0);
-            const raw = await Promise.all(
+            const fetchRange = async (range: bigint) => {
+              const fromBlock = latest > range ? latest - range : BigInt(0);
+              return Promise.all(
               TOKEN_KEYS.flatMap((token) => {
                 const tokenAddress = TOKENS[token].addresses[chain];
+                if (!tokenAddress) return [];
                 const common = {
                   address: tokenAddress,
                   event: TRANSFER_EVENT,
@@ -91,7 +98,19 @@ export function useActivity(address: `0x${string}` | undefined) {
                     ),
                 ];
               }),
-            );
+              );
+            };
+            // Reintento con ventanas más chicas si el RPC rechaza el rango grande.
+            let raw: Awaited<ReturnType<typeof fetchRange>> | null = null;
+            for (const divisor of [BigInt(1), BigInt(4), BigInt(16)]) {
+              try {
+                raw = await fetchRange(BLOCK_RANGE[chain] / divisor);
+                break;
+              } catch {
+                // probar la siguiente ventana
+              }
+            }
+            if (!raw) return [];
             const entries = raw.flat();
             const blocks = [...new Set(entries.map((e) => e.blockNumber))];
             const stamps = new Map(
