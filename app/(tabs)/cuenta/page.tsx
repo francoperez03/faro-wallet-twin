@@ -52,7 +52,7 @@ export default function CuentaPage() {
 
   if (!ready || isLoading) {
     return (
-      <div className="flex flex-col gap-4 p-6">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6 lg:max-w-5xl lg:p-8">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-12 w-full" />
       </div>
@@ -62,39 +62,45 @@ export default function CuentaPage() {
   const decimals = TOKENS.ARGt.decimals;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <div>
-        <p className="text-sm text-zinc-500">Saldo en tu Cuenta</p>
-        <p className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-zinc-900 tabular-nums">
-          {formatUnits(account?.argtBalance ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
+      <div className="flex flex-col gap-6">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / CUENTA
         </p>
-      </div>
 
-      <SolvencyBadge />
-
-      <div className="rounded-lg bg-zinc-100 p-4">
-        <p className="text-sm text-zinc-500">Interés acumulado</p>
-        <p className="mt-1 text-lg font-semibold text-zinc-900 tabular-nums">
-          {formatUnits(account?.interestAccrued ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
-        </p>
-      </div>
-
-      <div className="rounded-lg bg-zinc-100 p-4">
-        <p className="text-sm text-zinc-500">Tasa actual</p>
-        {apy != null ? (
-          <p className="mt-1 text-lg font-semibold text-zinc-900">{(apy * 100).toFixed(2)}% anual</p>
-        ) : (
-          <p className="mt-1 text-sm text-zinc-500">
-            Todavía no hay tasa calculada.{" "}
-            <Link href={MORPHO_VAULT_URL} target="_blank" className="text-blue-600">
-              Ver en Morpho
-            </Link>
+        <div>
+          <p className="text-sm text-muted-foreground">Saldo en tu Cuenta</p>
+          <p className="mt-2 text-[32px] font-serif leading-tight tracking-tight text-gold tabular-nums">
+            {formatUnits(account?.argtBalance ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
           </p>
-        )}
+        </div>
+
+        <SolvencyBadge />
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">Interés acumulado</p>
+          <p className="mt-1 text-lg font-semibold text-foreground tabular-nums">
+            {formatUnits(account?.interestAccrued ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-muted-foreground">Tasa actual</p>
+          {apy != null ? (
+            <p className="mt-1 text-lg font-semibold text-foreground">{(apy * 100).toFixed(2)}% anual</p>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Todavía no hay tasa calculada.{" "}
+              <Link href={MORPHO_VAULT_URL} target="_blank" className="text-gold">
+                Ver en Morpho
+              </Link>
+            </p>
+          )}
+        </div>
       </div>
 
-      <div className="flex gap-3">
-        <Button asChild className="flex-1 bg-blue-600 hover:bg-blue-700">
+      <div className="flex gap-3 lg:flex-col">
+        <Button asChild className="flex-1">
           <Link href="/cuenta/pasar">Pasar a Cuenta</Link>
         </Button>
         <Button asChild variant="outline" className="flex-1">
