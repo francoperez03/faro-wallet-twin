@@ -19,7 +19,7 @@ const ERC20_BALANCE_OF_ABI = [
  * Si una chain falla, su entry queda en `errors` y las demás siguen mostrando su balance.
  */
 export function useTokenBalances(address: `0x${string}` | undefined) {
-  const { data, isLoading } = useReadContracts({
+  const { data, isLoading, refetch } = useReadContracts({
     contracts: CHAINS.map((chain) => ({
       address: TOKENS.ARGt.addresses[chain],
       abi: ERC20_BALANCE_OF_ABI,
@@ -47,6 +47,6 @@ export function useTokenBalances(address: `0x${string}` | undefined) {
       }
     });
 
-    return { perChain, total, errors, isLoading };
-  }, [data, isLoading]);
+    return { perChain, total, errors, isLoading, refetch };
+  }, [data, isLoading, refetch]);
 }
