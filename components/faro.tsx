@@ -122,7 +122,7 @@ export function Faro({ size = 160, className }: { size?: number; className?: str
       <path d="M0 184 L200 184" stroke="var(--muted-foreground)" strokeWidth="1" opacity={0.6} />
 
       {/* Gemelo: reflejo invertido, difuminado y desvanecido hacia abajo */}
-      <g mask={`url(#${fade})`} opacity={0.4}>
+      <g mask={`url(#${fade})`} opacity={0.6}>
         <use href={`#${sceneId}`} transform="translate(0 368) scale(1 -1)" filter={`url(#${blur})`} />
       </g>
 
