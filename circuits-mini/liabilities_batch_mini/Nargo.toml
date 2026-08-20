@@ -1,0 +1,7 @@
+[package]
+name = "liabilities_batch_mini"
+type = "bin"
+authors = [""]
+
+[dependencies]
+commitment_lib = { path = "/Users/francoperez/repos/job/Sobre/sobrecito/circuits/commitment_lib" }
