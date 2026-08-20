@@ -10,7 +10,7 @@ Un neobanco de 24 horas sobre las stablecoins de Twin. Arranca con la wallet sel
 - Integer phases (1, 2, 3): Planned milestone work
 - Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
 
-- [ ] **Phase 1: Wallet Mode** - Login Privy, balances y transfers multichain de ARGt, vault Morpho, bridge entre chains
+- [x] **Phase 1: Wallet Mode** - Login Privy, balances y transfers multichain de ARGt, vault Morpho, bridge entre chains ✓ 2026-08-20 (código verificado; runtime pende del Privy App ID)
 - [x] **Phase 2: Sobrecito Registry** - Registry + verifier desplegados en Arbitrum, primer publish con la fixture ✓ 2026-08-20
 - [ ] **Phase 3: Modo Cuenta** - Ledger custodial con interés, depósitos y retiros
 - [ ] **Phase 4: Solvencia Visible** - Badge, verificación de inclusión del cliente, semáforo público, pipeline real (stretch)
@@ -101,7 +101,7 @@ Phases 1 and 2 can run in parallel (Phase 2 has no app dependency). Phase 3 need
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Wallet Mode | 0/TBD | Not started | - |
+| 1. Wallet Mode | 4/4 | Complete (runtime pending) | 2026-08-20 |
 | 2. Sobrecito Registry | 2/2 | Complete | 2026-08-20 |
 | 3. Modo Cuenta | 0/4 | Not started | - |
 | 4. Solvencia Visible | 0/TBD | Not started | - |
