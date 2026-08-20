@@ -21,7 +21,7 @@ const fraunces = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Faro",
+  title: "Faro Wallet",
   description: "Faro, neobanco sobre las stablecoins de Twin. Solvencia probada on-chain.",
 };
 
