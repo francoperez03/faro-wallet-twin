@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
-import { useAccount, useReadContract, useSwitchChain, useWriteContract } from "wagmi";
+import { useQueryClient } from "@tanstack/react-query";
+import { REWARDS_BALANCE_KEY } from "@/lib/hooks/use-rewards-balance";
+import {
+  useAccount,
+  useReadContract,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { arbitrum } from "viem/chains";
 import { formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
@@ -43,10 +50,12 @@ type RewardsAction = "depositar" | "retirar";
 const NONE = "none";
 const TAB_TRIGGER =
   "min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
-type DepositStatus = "idle" | "sending" | "confirming" | "acreditado" | "timeout";
+type DepositStatus =
+  "idle" | "sending" | "confirming" | "acreditado" | "timeout";
 
 export function RewardsPanel() {
   const { getAccessToken } = usePrivy();
+  const queryClient = useQueryClient();
   const { address, chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
@@ -71,19 +80,26 @@ export function RewardsPanel() {
   const loadAccount = useCallback(async () => {
     const token = await getAccessToken();
     const [accountRes, rateRes] = await Promise.all([
-      fetch("/api/account/account", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/account/account", {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
       fetch("/api/account/rate"),
     ]);
     if (accountRes.ok) {
       const data = await accountRes.json();
-      setAccount({ argtBalance: BigInt(data.argtBalance), interestAccrued: BigInt(data.interestAccrued) });
+      setAccount({
+        argtBalance: BigInt(data.argtBalance),
+        interestAccrued: BigInt(data.interestAccrued),
+      });
+      // El Saldo total de Home lee el mismo ledger vía useRewardsBalance: invalidar para que se actualice.
+      void queryClient.invalidateQueries({ queryKey: REWARDS_BALANCE_KEY });
     }
     if (rateRes.ok) {
       const data = await rateRes.json();
       setApy(data.apy);
     }
     setIsLoading(false);
-  }, [getAccessToken]);
+  }, [getAccessToken, queryClient]);
 
   useEffect(() => {
     loadAccount();
@@ -109,7 +125,11 @@ export function RewardsPanel() {
         if (res.ok) {
           const data = await res.json();
           const movements: { txHash?: string }[] = data.myNewMovements ?? [];
-          if (movements.some((m) => m.txHash?.toLowerCase() === hash.toLowerCase())) {
+          if (
+            movements.some(
+              (m) => m.txHash?.toLowerCase() === hash.toLowerCase(),
+            )
+          ) {
             setDepositStatus("acreditado");
             await loadAccount();
             return;
@@ -165,14 +185,18 @@ export function RewardsPanel() {
     } catch {
       return;
     }
-    if (assets <= BigInt(0) || (account && assets > account.argtBalance)) return;
+    if (assets <= BigInt(0) || (account && assets > account.argtBalance))
+      return;
 
     setIsWithdrawing(true);
     try {
       const token = await getAccessToken();
       const res = await fetch("/api/account/withdraw", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ amount: assets.toString(), chain: "arbitrum" }),
       });
       const data = await res.json();
@@ -200,11 +224,14 @@ export function RewardsPanel() {
     );
   }
 
-  const isDepositing = depositStatus === "sending" || depositStatus === "confirming";
+  const isDepositing =
+    depositStatus === "sending" || depositStatus === "confirming";
   const saldo = account?.argtBalance ?? BigInt(0);
   const rewards = account?.interestAccrued ?? BigInt(0);
   const rate =
-    omnibusValue !== undefined ? Number(formatUnits(omnibusValue, decimals)).toFixed(4) : null;
+    omnibusValue !== undefined
+      ? Number(formatUnits(omnibusValue, decimals)).toFixed(4)
+      : null;
 
   return (
     <div className="flex w-full flex-col gap-6">
@@ -215,7 +242,10 @@ export function RewardsPanel() {
           <p className="text-sm text-muted-foreground">Saldo en Rewards</p>
           {apy != null && (
             <span className="inline-flex items-center gap-1.5 rounded-[3px] bg-green-dim px-1.5 py-0.5 font-mono text-[11px] text-green">
-              <span className="size-1.5 rounded-full bg-green" aria-hidden="true" />
+              <span
+                className="size-1.5 rounded-full bg-green"
+                aria-hidden="true"
+              />
               APY {(apy * 100).toFixed(2).replace(".", ",")}%
             </span>
           )}
@@ -235,7 +265,9 @@ export function RewardsPanel() {
 
         <Tabs
           value={action ?? NONE}
-          onValueChange={(next) => setAction(next === NONE ? null : (next as RewardsAction))}
+          onValueChange={(next) =>
+            setAction(next === NONE ? null : (next as RewardsAction))
+          }
           className="mt-4 gap-3 border-t border-border pt-4"
         >
           <TabsList className="h-11 w-full gap-1 rounded-lg border border-border bg-background p-1">
@@ -250,7 +282,10 @@ export function RewardsPanel() {
           </TabsList>
 
           <TabsContent value="depositar">
-            <div ref={action === "depositar" ? actionRef : undefined} className="flex flex-col gap-3">
+            <div
+              ref={action === "depositar" ? actionRef : undefined}
+              className="flex flex-col gap-3"
+            >
               <Input
                 type="number"
                 inputMode="decimal"
@@ -263,10 +298,15 @@ export function RewardsPanel() {
               />
               <p className="text-sm text-muted-foreground">
                 Disponible:{" "}
-                <span className="tabular-nums">{formatUnits(balanceOnArbitrum, decimals)}</span>{" "}
+                <span className="tabular-nums">
+                  {formatUnits(balanceOnArbitrum, decimals)}
+                </span>{" "}
                 {TOKENS.ARGt.symbol}
               </p>
-              <Button onClick={handleDeposit} disabled={!address || isDepositing || !depositAmount}>
+              <Button
+                onClick={handleDeposit}
+                disabled={!address || isDepositing || !depositAmount}
+              >
                 {depositStatus === "sending" && "Enviando..."}
                 {depositStatus === "confirming" && "Confirmando..."}
                 {(depositStatus === "idle" ||
@@ -274,7 +314,9 @@ export function RewardsPanel() {
                   depositStatus === "timeout") &&
                   "Depositar"}
               </Button>
-              {depositStatus === "acreditado" && <p className="text-sm text-green">Acreditado</p>}
+              {depositStatus === "acreditado" && (
+                <p className="text-sm text-green">Acreditado</p>
+              )}
               {depositStatus === "timeout" && (
                 <p className="text-sm text-muted-foreground">
                   Puede tardar unos minutos, va a aparecer arriba.
@@ -284,7 +326,10 @@ export function RewardsPanel() {
           </TabsContent>
 
           <TabsContent value="retirar">
-            <div ref={action === "retirar" ? actionRef : undefined} className="flex flex-col gap-3">
+            <div
+              ref={action === "retirar" ? actionRef : undefined}
+              className="flex flex-col gap-3"
+            >
               <Input
                 type="number"
                 inputMode="decimal"
@@ -295,7 +340,10 @@ export function RewardsPanel() {
                 disabled={isWithdrawing}
                 className="min-h-11"
               />
-              <Button onClick={handleWithdraw} disabled={isWithdrawing || !withdrawAmount}>
+              <Button
+                onClick={handleWithdraw}
+                disabled={isWithdrawing || !withdrawAmount}
+              >
                 {isWithdrawing ? "Retirando..." : "Retirar"}
               </Button>
             </div>
@@ -306,7 +354,8 @@ export function RewardsPanel() {
           {rate !== null ? (
             <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
               1 ARGt <span aria-hidden="true">&rarr;</span>{" "}
-              <span className="tabular-nums normal-case">{rate}</span> ARGt en Morpho
+              <span className="tabular-nums normal-case">{rate}</span> ARGt en
+              Morpho
             </p>
           ) : (
             <span />

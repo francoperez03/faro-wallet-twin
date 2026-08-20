@@ -21,14 +21,9 @@ import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
-import { useVaultPosition } from "@/lib/hooks/use-vault-position";
+import { useRewardsBalance } from "@/lib/hooks/use-rewards-balance";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import {
-  TOKENS,
-  TOKEN_KEYS,
-  VAULT_ARGT_PRIME,
-  type TokenKey,
-} from "@/lib/config/tokens";
+import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
 import { cn } from "@/lib/utils";
 import { PAGE_WIDTH } from "@/lib/config/app";
 
@@ -63,13 +58,12 @@ export default function HomePage() {
     isLoading: isLoadingWallet,
     refetch,
   } = useTokenBalances(walletAddress, token);
-  // Saldo total = wallet en todas las redes + lo invertido en Rewards (vault ARGt Prime, solo ARGt).
-  const vault = useVaultPosition();
+  // Saldo total = wallet en todas las redes + lo invertido en Rewards (ledger, solo ARGt).
+  const rewards = useRewardsBalance();
   const invested =
-    token === VAULT_ARGT_PRIME.asset ? vault.valueInArgt : BigInt(0);
+    token === "ARGt" ? (rewards.data?.total ?? BigInt(0)) : BigInt(0);
   const total = walletTotal + invested;
-  const isLoading =
-    isLoadingWallet || (token === VAULT_ARGT_PRIME.asset && vault.isLoading);
+  const isLoading = isLoadingWallet || (token === "ARGt" && rewards.isLoading);
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
