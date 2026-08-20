@@ -51,7 +51,10 @@ export async function GET(req: NextRequest) {
   }
 
   const rows = await sql`select argt_balance from accounts where user_id = ${userId}`;
-  const balance = rows[0] ? BigInt(rows[0].argt_balance) : BigInt(0);
+  // Misma escala que los cortes reales (BAL_SCALE 1e10 -> unidades de 8 decimales),
+  // así ambas ramas comparten arity y unidad y la UI formatea siempre igual.
+  const BAL_SCALE = BigInt(10) ** BigInt(10);
+  const balance = (rows[0] ? BigInt(rows[0].argt_balance) : BigInt(0)) / BAL_SCALE;
   const reward = BigInt(0);
 
   const commitment = recomputeCommitment([balance, reward], salt);

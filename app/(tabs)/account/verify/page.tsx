@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { recomputeCommitment } from "@/lib/poseidon2/commit";
+import { formatUnits } from "viem";
 
 // ponytail: verde/rojo no están en 01-UI-SPEC.md; misma extensión mínima que
 // components/cuenta/solvency-badge.tsx (SOL-03), ahora sobre los tokens gold/green.
@@ -115,8 +116,14 @@ export default function VerificarPage() {
       {opening && (status === "match" || status === "mismatch") && (
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-foreground tabular-nums">
-            Tu balance base: {opening.balances[0] ?? "0"} · Tu reward:{" "}
-            {opening.balances[1] ?? "0"}
+            Tu balance base:{" "}
+            <span className="tabular-nums">
+              {formatUnits(BigInt(opening.balances[0] ?? "0"), 8)} ARGt
+            </span>{" "}
+            · Tu reward:{" "}
+            <span className="tabular-nums">
+              {formatUnits(BigInt(opening.balances[1] ?? "0"), 8)} ARGt
+            </span>
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
             Tu reward es tu parte exacta del rendimiento del vault en el
