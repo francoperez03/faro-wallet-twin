@@ -11,18 +11,19 @@ export const MIN_LEG = BigInt("10000000000000000");
  * Asume sum(current) == sum(target) (garantizado por las reglas de absorción de la UI).
  */
 export function computeRebalance(
-  current: Record<ChainKey, bigint>,
-  target: Record<ChainKey, bigint>
+  current: Partial<Record<ChainKey, bigint>>,
+  target: Partial<Record<ChainKey, bigint>>
 ): Leg[] {
   const chains = Object.keys(current) as ChainKey[];
+  const zero = BigInt(0);
 
   const surplus = chains
-    .map((chain) => ({ chain, amount: current[chain] - target[chain] }))
+    .map((chain) => ({ chain, amount: (current[chain] ?? zero) - (target[chain] ?? zero) }))
     .filter((s) => s.amount > MIN_LEG)
     .sort((a, b) => (b.amount > a.amount ? 1 : b.amount < a.amount ? -1 : 0));
 
   const deficit = chains
-    .map((chain) => ({ chain, amount: target[chain] - current[chain] }))
+    .map((chain) => ({ chain, amount: (target[chain] ?? zero) - (current[chain] ?? zero) }))
     .filter((d) => d.amount > MIN_LEG)
     .sort((a, b) => (b.amount > a.amount ? 1 : b.amount < a.amount ? -1 : 0));
 
