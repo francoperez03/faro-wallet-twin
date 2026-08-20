@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { REWARDS_BALANCE_KEY } from "@/lib/hooks/use-rewards-balance";
@@ -23,6 +22,7 @@ import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
+import { VerifyRewards } from "@/components/verify-rewards";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -64,6 +64,8 @@ export function RewardsPanel() {
   const [account, setAccount] = useState<AccountData | null>(null);
   const [action, setAction] = useState<RewardsAction | null>(null);
   const actionRef = useRevealAnimation<HTMLDivElement>(action !== null);
+  const [showVerify, setShowVerify] = useState(false);
+  const verifyRef = useRevealAnimation<HTMLDivElement>(showVerify);
   const [apy, setApy] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -360,13 +362,21 @@ export function RewardsPanel() {
           ) : (
             <span />
           )}
-          <Link
-            href="/account/verify"
-            className="min-h-11 content-center text-sm text-gold underline-offset-4 hover:underline"
+          <button
+            type="button"
+            aria-expanded={showVerify}
+            onClick={() => setShowVerify((v) => !v)}
+            className="min-h-11 text-sm text-gold underline-offset-4 hover:underline"
           >
-            Verificar mis rewards
-          </Link>
+            {showVerify ? "Ocultar verificación" : "Verificar mis rewards"}
+          </button>
         </div>
+
+        {showVerify && (
+          <div ref={verifyRef} className="mt-3 border-t border-border pt-4">
+            <VerifyRewards />
+          </div>
+        )}
       </div>
     </div>
   );
