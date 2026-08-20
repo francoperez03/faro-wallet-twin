@@ -212,6 +212,24 @@ export function RebalancePanel({
     setEditedText((prev) => ({ ...prev, [chain]: text }));
   }
 
+  /** Arrastre de barra: la red arrastrada queda fija y las otras absorben el resto en
+   * proporción a sus objetivos actuales, así la suma nunca supera el total. */
+  function setChainAmount(chain: ChainKey, amount: bigint) {
+    const others = BRIDGE_CHAINS.filter((c) => c !== chain);
+    const remaining = total - amount;
+    const next: Partial<Record<ChainKey, string>> = { [chain]: formatUnits(amount, decimals) };
+    if (others.length === 1) {
+      next[others[0]] = formatUnits(remaining, decimals);
+    } else {
+      const [a, b] = others;
+      const [shareA, shareB] = splitProportional(remaining, targets[a], targets[b]);
+      next[a] = formatUnits(shareA, decimals);
+      next[b] = formatUnits(shareB, decimals);
+    }
+    setPreset(null);
+    setEditedText(next);
+  }
+
   function applyPreset(id: string, values: Record<ChainKey, bigint>) {
     if (preset === id) return;
     setPreset(id);
@@ -307,7 +325,7 @@ export function RebalancePanel({
                   const bps = BigInt(e.target.value);
                   const centUnit = BigInt(10) ** BigInt(decimals - 2);
                   const amount = (((total * bps) / BigInt(10000)) / centUnit) * centUnit;
-                  setChainText(chain, formatUnits(amount, decimals));
+                  setChainAmount(chain, amount);
                 }}
                 className={cn(
                   "rebalance-slider mb-1 block h-4 w-full cursor-pointer appearance-none bg-transparent disabled:cursor-default disabled:opacity-50",
