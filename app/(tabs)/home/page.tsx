@@ -3,7 +3,13 @@
 import { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { animate } from "animejs";
-import { ArrowDownLeft, ArrowLeft, ArrowUpRight, ChevronDown, TrendingUp } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeft,
+  ArrowUpRight,
+  ChevronDown,
+  TrendingUp,
+} from "lucide-react";
 import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,7 +23,8 @@ import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
-import { cn  } from "@/lib/utils";
+import { cn } from "@/lib/utils";
+import { PAGE_WIDTH } from "@/lib/config/app";
 
 /** Radix Tabs necesita un value; este no matchea ningún trigger, así el panel arranca colapsado
  * (patrón vault-aggregator/lemon-account-card.tsx). */
@@ -48,7 +55,8 @@ export default function HomePage() {
   // Deep link (/home?view=rewards, desde el redirect de /rewards): arranca en el paso Rewards
   // sin animación, patrón "carga" del rail vault-aggregator (prev === null => sin choreography).
   const [step, setStep] = useState<Step>(() =>
-    typeof window !== "undefined" && new URLSearchParams(window.location.search).get("view") === "rewards"
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("view") === "rewards"
       ? "rewards"
       : "home",
   );
@@ -97,7 +105,10 @@ export default function HomePage() {
 
   // Rail: dos pasos lado a lado (home / rewards), patrón vault-aggregator page.tsx:255-291.
   const railRef = useRef<HTMLDivElement>(null);
-  const colRefs = useRef<Record<Step, HTMLDivElement | null>>({ home: null, rewards: null });
+  const colRefs = useRef<Record<Step, HTMLDivElement | null>>({
+    home: null,
+    rewards: null,
+  });
   const prevStepRef = useRef<Step | null>(null);
 
   useEffect(() => {
@@ -108,7 +119,8 @@ export default function HomePage() {
     if (rail) prevStepRef.current = step;
     if (!rail) return;
     if (prev === null) {
-      if (step !== "home") rail.style.transform = `translateX(${-(STEP_INDEX[step] * 100) / 2}%)`;
+      if (step !== "home")
+        rail.style.transform = `translateX(${-(STEP_INDEX[step] * 100) / 2}%)`;
       return;
     }
     if (prev === step) return;
@@ -126,8 +138,17 @@ export default function HomePage() {
       incoming.style.transform = "";
       return;
     }
-    const slide = animate(rail, { translateX: `${to}%`, duration: 600, ease: "outExpo" });
-    const leave = animate(outgoing, { opacity: 0, scale: 0.98, duration: 260, ease: "outQuad" });
+    const slide = animate(rail, {
+      translateX: `${to}%`,
+      duration: 600,
+      ease: "outExpo",
+    });
+    const leave = animate(outgoing, {
+      opacity: 0,
+      scale: 0.98,
+      duration: 260,
+      ease: "outQuad",
+    });
     const arrive = animate(incoming, {
       opacity: [0, 1],
       translateY: [14, 0],
@@ -170,7 +191,7 @@ export default function HomePage() {
 
   if (!ready) {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6 lg:max-w-6xl lg:p-8">
+      <div className={cn(PAGE_WIDTH, "flex flex-col gap-4 p-6 lg:p-8")}>
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-12 w-full" />
       </div>
@@ -179,7 +200,12 @@ export default function HomePage() {
 
   if (!authenticated) {
     return (
-      <div className="mx-auto flex min-h-full w-full max-w-lg flex-1 flex-col items-center justify-center gap-6 p-6 text-center lg:max-w-6xl lg:p-8">
+      <div
+        className={cn(
+          PAGE_WIDTH,
+          "flex min-h-full flex-1 flex-col items-center justify-center gap-6 p-6 text-center lg:p-8",
+        )}
+      >
         <Faro size={160} />
         <h1 className="font-serif text-3xl text-foreground">Faro</h1>
         <Button onClick={() => login()}>Ingresar</Button>
@@ -188,7 +214,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col p-6 lg:max-w-6xl lg:p-8">
+    <div className={cn(PAGE_WIDTH, "flex flex-1 flex-col p-6 lg:p-8")}>
       <button
         ref={backRef}
         type="button"
@@ -206,8 +232,14 @@ export default function HomePage() {
 
       <div className="flex-1 overflow-hidden">
         <div ref={railRef} className="flex w-[200%]">
-          <div ref={(el) => { colRefs.current.home = el; }} className={cn("w-1/2", step !== "home" && "opacity-0")} aria-hidden={step !== "home"}>
-            <div className="mx-auto flex w-full max-w-2xl flex-col gap-6">
+          <div
+            ref={(el) => {
+              colRefs.current.home = el;
+            }}
+            className={cn("w-1/2", step !== "home" && "opacity-0")}
+            aria-hidden={step !== "home"}
+          >
+            <div className="flex w-full flex-col gap-6">
               <div className="flex flex-col gap-6">
                 {/* Filtro de moneda por bandera (pelotitas), arriba de la card de saldo */}
                 <div
@@ -290,7 +322,10 @@ export default function HomePage() {
                           Enviar
                         </TabsTrigger>
                         <TabsTrigger value="recibir" className={TAB_TRIGGER}>
-                          <ArrowDownLeft className="size-4" aria-hidden="true" />
+                          <ArrowDownLeft
+                            className="size-4"
+                            aria-hidden="true"
+                          />
                           Recibir
                         </TabsTrigger>
                       </TabsList>
@@ -305,7 +340,9 @@ export default function HomePage() {
                         />
                       </TabsContent>
                       <TabsContent value="recibir">
-                        {walletAddress && <ReceivePanel address={walletAddress} />}
+                        {walletAddress && (
+                          <ReceivePanel address={walletAddress} />
+                        )}
                       </TabsContent>
                     </Tabs>
                   )}
@@ -343,11 +380,16 @@ export default function HomePage() {
 
                 <ActivityCard walletAddress={walletAddress} />
               </div>
-
             </div>
           </div>
 
-          <div ref={(el) => { colRefs.current.rewards = el; }} className={cn("w-1/2", step !== "rewards" && "opacity-0")} aria-hidden={step !== "rewards"}>
+          <div
+            ref={(el) => {
+              colRefs.current.rewards = el;
+            }}
+            className={cn("w-1/2", step !== "rewards" && "opacity-0")}
+            aria-hidden={step !== "rewards"}
+          >
             <RewardsPanel />
           </div>
         </div>

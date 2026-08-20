@@ -1,5 +1,8 @@
 "use client";
 
+import { PAGE_WIDTH } from "@/lib/config/app";
+import { cn } from "@/lib/utils";
+
 import { useState } from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
@@ -8,7 +11,12 @@ import { formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CHAIN_IDS, CHAIN_LABELS, EXPLORER_TX_URL, TOKENS } from "@/lib/config/tokens";
+import {
+  CHAIN_IDS,
+  CHAIN_LABELS,
+  EXPLORER_TX_URL,
+  TOKENS,
+} from "@/lib/config/tokens";
 import { DEPOSIT_CHAIN, OMNIBUS_VAULT_ADDRESS } from "@/lib/config/cuenta";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 
@@ -63,13 +71,17 @@ export default function PasarACuentaPage() {
     }
   }
 
-  const bridgeSuggestChain = OTHER_CHAINS.find((c) => (perChain[c] ?? BigInt(0)) > BigInt(0));
+  const bridgeSuggestChain = OTHER_CHAINS.find(
+    (c) => (perChain[c] ?? BigInt(0)) > BigInt(0),
+  );
   const showBridgeSuggestion = Boolean(
-    amountBigInt && amountBigInt > balanceOnArbitrum && bridgeSuggestChain
+    amountBigInt && amountBigInt > balanceOnArbitrum && bridgeSuggestChain,
   );
 
   const isBusy = status === "sending" || status === "confirming";
-  const canSubmit = Boolean(!isBusy && walletAddress && amount.length > 0 && !amountError);
+  const canSubmit = Boolean(
+    !isBusy && walletAddress && amount.length > 0 && !amountError,
+  );
 
   async function pollForCredit(hash: `0x${string}`) {
     setStatus("confirming");
@@ -84,7 +96,9 @@ export default function PasarACuentaPage() {
         if (res.ok) {
           const data = await res.json();
           const movements: { txHash?: string }[] = data.myNewMovements ?? [];
-          const found = movements.some((m) => m.txHash?.toLowerCase() === hash.toLowerCase());
+          const found = movements.some(
+            (m) => m.txHash?.toLowerCase() === hash.toLowerCase(),
+          );
           if (found) {
             setStatus("acreditado");
             return;
@@ -122,13 +136,15 @@ export default function PasarACuentaPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+    <div className={cn(PAGE_WIDTH, "flex flex-col gap-6 p-6 lg:p-8")}>
       <div>
         <h1 className="font-serif text-3xl text-foreground">Pasar a Cuenta</h1>
       </div>
 
       <div className="flex flex-col gap-2">
-        <span className="text-sm text-muted-foreground">Monto ({CHAIN_LABELS[DEPOSIT_CHAIN]})</span>
+        <span className="text-sm text-muted-foreground">
+          Monto ({CHAIN_LABELS[DEPOSIT_CHAIN]})
+        </span>
         <Input
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
@@ -138,10 +154,14 @@ export default function PasarACuentaPage() {
         />
         <p className="text-sm text-muted-foreground">
           Disponible en {CHAIN_LABELS[DEPOSIT_CHAIN]}:{" "}
-          <span className="tabular-nums">{formatUnits(balanceOnArbitrum, decimals)}</span>{" "}
+          <span className="tabular-nums">
+            {formatUnits(balanceOnArbitrum, decimals)}
+          </span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
-        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
+        {amountError && (
+          <p className="text-sm text-destructive">{amountError}</p>
+        )}
         {showBridgeSuggestion && bridgeSuggestChain && (
           <p className="text-sm text-muted-foreground">
             No te alcanza en {CHAIN_LABELS[DEPOSIT_CHAIN]}, pero tenés ARGt en{" "}
@@ -157,7 +177,9 @@ export default function PasarACuentaPage() {
         {status === "sending" ? "Enviando..." : "Pasar a Cuenta"}
       </Button>
 
-      {status === "confirming" && <p className="text-sm text-muted-foreground">Confirmando...</p>}
+      {status === "confirming" && (
+        <p className="text-sm text-muted-foreground">Confirmando...</p>
+      )}
       {status === "acreditado" && (
         <div className="rounded-md border border-border bg-card p-4">
           <p className="text-sm font-medium text-gold">Acreditado</p>
@@ -174,7 +196,9 @@ export default function PasarACuentaPage() {
         </div>
       )}
       {status === "timeout" && (
-        <p className="text-sm text-muted-foreground">Puede tardar unos minutos, va a aparecer en tu Cuenta.</p>
+        <p className="text-sm text-muted-foreground">
+          Puede tardar unos minutos, va a aparecer en tu Cuenta.
+        </p>
       )}
     </div>
   );

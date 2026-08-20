@@ -7,3 +7,6 @@ export const PRODUCT_NAME = "Faro";
 // primero: 'bolt' (bonus), 'bridge', 'cuenta', 'vault'. 'm1' (login+balances)
 // nunca entra acá.
 export const HIDDEN_SECTIONS: string[] = [];
+
+// Ancho único de todas las páginas (Home, Rewards, Mover, Actividad). Cambiarlo acá y nada más.
+export const PAGE_WIDTH = "mx-auto w-full max-w-2xl";

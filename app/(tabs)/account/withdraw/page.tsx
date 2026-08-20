@@ -1,11 +1,19 @@
 "use client";
 
+import { PAGE_WIDTH } from "@/lib/config/app";
+
 import { useCallback, useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatUnits, parseUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CHAINS, CHAIN_LABELS, EXPLORER_TX_URL, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import {
+  CHAINS,
+  CHAIN_LABELS,
+  EXPLORER_TX_URL,
+  TOKENS,
+  type ChainKey,
+} from "@/lib/config/tokens";
 import { DAILY_WITHDRAW_LIMIT_BASE_UNITS } from "@/lib/config/cuenta";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +33,9 @@ export default function RetirarPage() {
 
   const loadBalance = useCallback(async () => {
     const token = await getAccessToken();
-    const res = await fetch("/api/account/account", { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch("/api/account/account", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
     if (res.ok) {
       const data = await res.json();
       setArgtBalance(BigInt(data.argtBalance));
@@ -60,7 +70,9 @@ export default function RetirarPage() {
   }
 
   const isBusy = status === "processing";
-  const canSubmit = Boolean(!isBusy && amount.length > 0 && !amountError && argtBalance != null);
+  const canSubmit = Boolean(
+    !isBusy && amount.length > 0 && !amountError && argtBalance != null,
+  );
 
   async function onSubmit() {
     if (!canSubmit || !amountBigInt) return;
@@ -71,7 +83,10 @@ export default function RetirarPage() {
       const token = await getAccessToken();
       const res = await fetch("/api/account/withdraw", {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ amount: amountBigInt.toString(), chain }),
       });
       const data = await res.json();
@@ -91,7 +106,7 @@ export default function RetirarPage() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+    <div className={cn(PAGE_WIDTH, "flex flex-col gap-6 p-6 lg:p-8")}>
       <div>
         <h1 className="font-serif text-3xl text-foreground">Retirar</h1>
       </div>
@@ -109,7 +124,7 @@ export default function RetirarPage() {
                 "min-h-11 flex-1 rounded-md border text-sm",
                 chain === c
                   ? "border-primary bg-primary text-primary-foreground"
-                  : "border-border bg-card text-foreground"
+                  : "border-border bg-card text-foreground",
               )}
             >
               {CHAIN_LABELS[c]}
@@ -134,7 +149,9 @@ export default function RetirarPage() {
           </span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
-        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
+        {amountError && (
+          <p className="text-sm text-destructive">{amountError}</p>
+        )}
       </div>
 
       <Button onClick={onSubmit} disabled={!canSubmit}>

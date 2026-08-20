@@ -1,5 +1,7 @@
 "use client";
 
+import { PAGE_WIDTH } from "@/lib/config/app";
+
 import { useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { formatEther, formatUnits, parseUnits } from "viem";
@@ -27,7 +29,9 @@ const NATIVE_SYMBOL: Record<ChainKey, string> = {
 const TX_ERROR =
   "No pudimos completar la operación. Revisá tu conexión o el saldo disponible y volvé a intentar.";
 
-const STATUS_PILL: Partial<Record<BridgeStatus, { label: string; className: string }>> = {
+const STATUS_PILL: Partial<
+  Record<BridgeStatus, { label: string; className: string }>
+> = {
   cotizando: {
     label: "Cotizando fee...",
     className: "border border-border bg-card text-foreground",
@@ -52,7 +56,7 @@ export default function BridgePage() {
   const { perChain, refetch } = balances;
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+    <div className={cn(PAGE_WIDTH, "flex flex-col gap-6 p-6 lg:p-8")}>
       <div>
         <h1 className="font-serif text-3xl text-foreground">Redes</h1>
       </div>
@@ -130,7 +134,8 @@ function MoverPanel({
           if (!cancelled) setFee(quoted.nativeFee);
         })
         .catch(() => {
-          if (!cancelled) setFeeError("No pudimos cotizar el fee. Probá de nuevo.");
+          if (!cancelled)
+            setFeeError("No pudimos cotizar el fee. Probá de nuevo.");
         });
     }, QUOTE_DEBOUNCE_MS);
     return () => {
@@ -142,11 +147,11 @@ function MoverPanel({
 
   const canSubmit = Boolean(
     !isSubmitting &&
-      walletAddress &&
-      amountBigInt &&
-      !amountError &&
-      fee !== null &&
-      fromChain !== toChain
+    walletAddress &&
+    amountBigInt &&
+    !amountError &&
+    fee !== null &&
+    fromChain !== toChain,
   );
 
   async function onSubmit() {
@@ -184,14 +189,21 @@ function MoverPanel({
           }}
         />
         <p className="text-sm text-muted-foreground">
-          Disponible: <span className="tabular-nums">{formatUnits(balanceOnChain, decimals)}</span>{" "}
+          Disponible:{" "}
+          <span className="tabular-nums">
+            {formatUnits(balanceOnChain, decimals)}
+          </span>{" "}
           {TOKENS.ARGt.symbol}
         </p>
       </div>
 
       <div className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">Hacia</span>
-        <ChainPicker chains={destChains} value={toChain} onChange={setToChain} />
+        <ChainPicker
+          chains={destChains}
+          value={toChain}
+          onChange={setToChain}
+        />
       </div>
 
       <div className="flex flex-col gap-2">
@@ -202,7 +214,9 @@ function MoverPanel({
           inputMode="decimal"
           placeholder="0.0"
         />
-        {amountError && <p className="text-sm text-destructive">{amountError}</p>}
+        {amountError && (
+          <p className="text-sm text-destructive">{amountError}</p>
+        )}
       </div>
 
       {amountBigInt && !amountError && (
@@ -210,7 +224,8 @@ function MoverPanel({
           {fee !== null ? (
             <p>
               Fee de mensajería estimado:{" "}
-              <span className="tabular-nums">{formatEther(fee)}</span> {NATIVE_SYMBOL[fromChain]}
+              <span className="tabular-nums">{formatEther(fee)}</span>{" "}
+              {NATIVE_SYMBOL[fromChain]}
             </p>
           ) : feeError ? (
             <p className="text-destructive">{feeError}</p>
@@ -228,7 +243,7 @@ function MoverPanel({
         <Badge
           className={cn(
             "w-fit rounded-[3px] px-1.5 py-0.5 font-mono text-[11px]",
-            pill.className
+            pill.className,
           )}
         >
           {pill.label}
@@ -236,8 +251,9 @@ function MoverPanel({
       )}
       {status === "timeout" && (
         <p className="text-sm text-muted-foreground">
-          Todavía no vemos el balance actualizado en destino. Puede tardar unos minutos más;
-          revisá el explorer de la red destino si querés confirmar el estado.
+          Todavía no vemos el balance actualizado en destino. Puede tardar unos
+          minutos más; revisá el explorer de la red destino si querés confirmar
+          el estado.
         </p>
       )}
       {error && <p className="text-sm text-destructive">{TX_ERROR}</p>}

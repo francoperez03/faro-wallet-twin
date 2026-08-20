@@ -1,5 +1,8 @@
 "use client";
 
+import { PAGE_WIDTH } from "@/lib/config/app";
+import { cn } from "@/lib/utils";
+
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
@@ -29,7 +32,9 @@ export default function CuentaPage() {
       headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {});
     const [accountRes, rateRes] = await Promise.all([
-      fetch("/api/account/account", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/account/account", {
+        headers: { Authorization: `Bearer ${token}` },
+      }),
       fetch("/api/account/rate"),
     ]);
     if (accountRes.ok) {
@@ -52,7 +57,7 @@ export default function CuentaPage() {
 
   if (!ready || isLoading) {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6 lg:max-w-5xl lg:p-8">
+      <div className={cn(PAGE_WIDTH, "flex flex-col gap-4 p-6 lg:p-8")}>
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-12 w-full" />
       </div>
@@ -62,13 +67,18 @@ export default function CuentaPage() {
   const decimals = TOKENS.ARGt.decimals;
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
+    <div
+      className={cn(
+        PAGE_WIDTH,
+        "flex flex-col gap-6 p-6 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8",
+      )}
+    >
       <div className="flex flex-col gap-6">
-
         <div>
           <p className="text-sm text-muted-foreground">Saldo en tu Cuenta</p>
           <p className="mt-2 text-[32px] font-serif leading-tight tracking-tight text-gold tabular-nums">
-            {formatUnits(account?.argtBalance ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
+            {formatUnits(account?.argtBalance ?? BigInt(0), decimals)}{" "}
+            {TOKENS.ARGt.symbol}
           </p>
         </div>
 
@@ -77,18 +87,25 @@ export default function CuentaPage() {
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Interés acumulado</p>
           <p className="mt-1 text-lg font-semibold text-foreground tabular-nums">
-            {formatUnits(account?.interestAccrued ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
+            {formatUnits(account?.interestAccrued ?? BigInt(0), decimals)}{" "}
+            {TOKENS.ARGt.symbol}
           </p>
         </div>
 
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Tasa actual</p>
           {apy != null ? (
-            <p className="mt-1 text-lg font-semibold text-foreground">{(apy * 100).toFixed(2)}% anual</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">
+              {(apy * 100).toFixed(2)}% anual
+            </p>
           ) : (
             <p className="mt-1 text-sm text-muted-foreground">
               Todavía no hay tasa calculada.{" "}
-              <Link href={MORPHO_VAULT_URL} target="_blank" className="text-gold">
+              <Link
+                href={MORPHO_VAULT_URL}
+                target="_blank"
+                className="text-gold"
+              >
                 Ver en Morpho
               </Link>
             </p>

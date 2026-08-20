@@ -1,5 +1,8 @@
 "use client";
 
+import { PAGE_WIDTH } from "@/lib/config/app";
+import { cn } from "@/lib/utils";
+
 import { useCallback, useEffect, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { Badge } from "@/components/ui/badge";
@@ -36,7 +39,9 @@ export default function VerificarPage() {
     setStatus("loading");
     try {
       const token = await getAccessToken();
-      const res = await fetch("/api/account/opening", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/account/opening", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (!res.ok) {
         setStatus("error");
         return;
@@ -72,7 +77,7 @@ export default function VerificarPage() {
 
   if (!ready || status === "loading") {
     return (
-      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6 lg:max-w-xl lg:p-8">
+      <div className={cn(PAGE_WIDTH, "flex flex-col gap-4 p-6 lg:p-8")}>
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-24 w-full" />
       </div>
@@ -86,44 +91,61 @@ export default function VerificarPage() {
     : undefined;
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+    <div className={cn(PAGE_WIDTH, "flex flex-col gap-6 p-6 lg:p-8")}>
       <div>
-        <h1 className="font-serif text-3xl text-foreground">Verificá tu inclusión</h1>
+        <h1 className="font-serif text-3xl text-foreground">
+          Verificá tu inclusión
+        </h1>
       </div>
 
-      {status === "error" && <p className="text-sm text-muted-foreground">No pudimos pedir tu opening. Reintentá.</p>}
+      {status === "error" && (
+        <p className="text-sm text-muted-foreground">
+          No pudimos pedir tu opening. Reintentá.
+        </p>
+      )}
 
       {(status === "match" || status === "mismatch") && (
         <Badge className={STATUS_STYLES[status === "match" ? "verde" : "rojo"]}>
-          {status === "match" ? "Tu saldo está incluido" : "Discrepancia detectada"}
+          {status === "match"
+            ? "Tu saldo está incluido"
+            : "Discrepancia detectada"}
         </Badge>
       )}
 
       {opening && (status === "match" || status === "mismatch") && (
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-foreground tabular-nums">
-            Tu balance base: {opening.balances[0] ?? "0"} · Tu reward: {opening.balances[1] ?? "0"}
+            Tu balance base: {opening.balances[0] ?? "0"} · Tu reward:{" "}
+            {opening.balances[1] ?? "0"}
           </p>
           <p className="mt-1 text-sm text-muted-foreground">
-            Tu reward es tu parte exacta del rendimiento del vault en el período.
+            Tu reward es tu parte exacta del rendimiento del vault en el
+            período.
           </p>
         </div>
       )}
 
       {status === "mismatch" && mailto && (
-        <Button asChild variant="outline" className="w-fit border-destructive text-destructive hover:text-destructive">
+        <Button
+          asChild
+          variant="outline"
+          className="w-fit border-destructive text-destructive hover:text-destructive"
+        >
           <a href={mailto}>Reportar discrepancia</a>
         </Button>
       )}
 
       {opening?.synthetic && (
-        <p className="text-sm text-muted-foreground">Corte sintético (era fixture, sin corte real todavía).</p>
+        <p className="text-sm text-muted-foreground">
+          Corte sintético (era fixture, sin corte real todavía).
+        </p>
       )}
 
       <div className="rounded-lg border border-border bg-card p-4 text-sm text-foreground/80">
-        Verificás que tu opening abre contra tu commitment servido por el backend. Los commitments
-        individuales no están on-chain (solo el acumulado del corte), así que la garantía contra omisión
-        la da el binding del auditor, no la cadena sola.
+        Verificás que tu opening abre contra tu commitment servido por el
+        backend. Los commitments individuales no están on-chain (solo el
+        acumulado del corte), así que la garantía contra omisión la da el
+        binding del auditor, no la cadena sola.
       </div>
     </div>
   );
