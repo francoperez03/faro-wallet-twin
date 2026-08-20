@@ -48,7 +48,7 @@ export function ActivityCard({
   const { data, isLoading } = useActivity(walletAddress);
   const [showFilters, setShowFilters] = useState(false);
   const filtersRef = useRevealAnimation<HTMLDivElement>(showFilters);
-  const filterCount = (token === ALL ? 0 : 1) + (chain === ALL ? 0 : 1);
+  const hasFilters = token !== ALL || chain !== ALL;
 
   const failed = data?.failedChains ?? [];
   const entries = (data?.entries ?? []).filter(
@@ -73,18 +73,13 @@ export function ActivityCard({
           onClick={() => setShowFilters((v) => !v)}
           className={cn(
             "flex min-h-11 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors",
-            showFilters || filterCount > 0
+            showFilters || hasFilters
               ? "text-gold"
               : "text-muted-foreground hover:text-foreground",
           )}
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
           Filtrar
-          {filterCount > 0 && (
-            <span className="rounded-[3px] bg-gold-dim px-1 font-mono text-[11px] text-gold">
-              {filterCount}
-            </span>
-          )}
         </button>
       </div>
 
