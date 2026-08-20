@@ -27,6 +27,12 @@ create unique index if not exists movements_deposit_tx_hash_idx
 
 create index if not exists movements_user_id_idx on movements (user_id);
 
+-- Pivote de yield (circuits-mini/yield_cut): balance BASE pre-credito usado por
+-- lib/cuenta/interest.ts::accrueInterest para el pro rata de cada movimiento 'interest',
+-- persistido para poder reconstruir/auditar el corte sin depender del retorno en memoria
+-- de esa corrida (null en movimientos anteriores a este pivote, deposit/withdraw no lo usan).
+alter table movements add column if not exists base_balance numeric(38, 0);
+
 -- last_processed_block (depósitos) y snapshot de convertToAssets (interés), D-03.
 create table if not exists sync_state (
   key text primary key,
@@ -38,6 +44,10 @@ create table if not exists sync_state (
 -- bolt_balance] (mismo orden que el circuito), commitment = commit(balances, salt)
 -- calculado con el mismo Poseidon2 que el circuito (lib/poseidon2/commit.ts). Idempotente:
 -- correr el corte dos veces con el mismo corte_id no rompe (unique en la PK compuesta).
+-- Reusada por el pivote de yield (circuits-mini/yield_cut, lib/sobrecito-mini/prove-yield.ts):
+-- ahi balances = [balance, reward] (mismo orden que ese circuito), mismo corte_id compartido
+-- namespace (los corte_id de yield y de liabilities_batch_mini nunca colisionan, cada
+-- pipeline arma el suyo con un prefijo distinto).
 create table if not exists openings (
   corte_id text not null,
   user_id text not null references accounts (user_id),

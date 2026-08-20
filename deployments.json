@@ -19,9 +19,20 @@
       "deployTx": "0x74309d659987834e656545db0035f34aafb495dda9758cd5bc1221b89a95070c",
       "keyHash": "0x00000000000000000000000000000000000000000054574e2f4d494e492f7631",
       "explorer": "https://arbiscan.io/address/0x34d16b00809fcc6a6b0855d2052708615dbdc2c7",
+      "publishTx": "0x1fdf834152fd462932aeddd48d076cbf249a39e58b3ae94c9f28122cd17624fd",
+      "corteId": "0x1e13d415ec6ef8d4b40ed903cb01ee95b4d7096fe34b614e83d09b1f60c2183a"
+    },
+    {
+      "label": "Rendimiento (yield)",
+      "address": "0x06282d1a04be98f400387f3965704f8846d7fefb",
+      "verifierAddress": "0x283b6a42ab17a7b494f4b5ca4f063bb5fd5e0b23",
+      "chainId": 42161,
+      "deployTx": "0x09f0f5dc8f79e62f8877e36a333fc84b41bd04dc05964c3fb5fa42c2aaf03258",
+      "keyHash": "0x000000000000000000000000000000000000004641524f2f5949454c442f7631",
+      "explorer": "https://arbiscan.io/address/0x06282d1a04be98f400387f3965704f8846d7fefb",
       "publishTx": null,
       "corteId": null,
-      "note": "04-03: circuito mini (circuits-mini/liabilities_batch_mini), sin corte publicado todavia (Task 3 lo publica desde el cron/boton manual)"
+      "note": "circuito circuits-mini/yield_cut, contrato FaroYieldRegistry (fork de SobrecitoRegistry con PUBLIC_INPUTS_LENGTH=3 y cR probado == delta), sin corte publicado todavia"
     }
   ]
 }

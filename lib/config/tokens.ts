@@ -74,7 +74,8 @@ export const BRIDGE_ADAPTERS: Partial<Record<ChainKey, `0x${string}`>> = {
 export const BRIDGE_CHAINS = CHAINS.filter((c) => Boolean(BRIDGE_ADAPTERS[c]));
 
 // SobrecitoRegistry (Phase 2 SOL-01/SOL-02). Fallback = deployments.json (raíz del repo),
-// override por env NEXT_PUBLIC_REGISTRY_1_*. Phase 4 (04-03) agrega un segundo entry.
+// override por env NEXT_PUBLIC_REGISTRY_1_*. Phase 4 (04-03) agrega un segundo entry, el
+// pivote de yield (contracts-yield/) agrega un tercero.
 export const REGISTRIES: { label: string; address: `0x${string}`; chainId: number }[] = [
   {
     label: process.env.NEXT_PUBLIC_REGISTRY_1_LABEL ?? "Fixture sintética",
@@ -87,5 +88,11 @@ export const REGISTRIES: { label: string; address: `0x${string}`; chainId: numbe
     address: (process.env.NEXT_PUBLIC_REGISTRY_2_ADDRESS ??
       "0x34d16b00809fcc6a6b0855d2052708615dbdc2c7") as `0x${string}`,
     chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_2_CHAIN_ID ?? 42161),
+  },
+  {
+    label: process.env.NEXT_PUBLIC_REGISTRY_3_LABEL ?? "Rendimiento (yield)",
+    address: (process.env.NEXT_PUBLIC_REGISTRY_3_ADDRESS ??
+      "0x06282d1a04be98f400387f3965704f8846d7fefb") as `0x${string}`,
+    chainId: Number(process.env.NEXT_PUBLIC_REGISTRY_3_CHAIN_ID ?? 42161),
   },
 ];
