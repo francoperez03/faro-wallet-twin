@@ -31,8 +31,13 @@ export default function ActividadPage() {
   const { data: entries, isLoading } = useActivity(walletAddress, chain);
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Actividad</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / ACTIVIDAD
+        </p>
+        <h1 className="font-serif text-3xl text-foreground">Actividad</h1>
+      </div>
 
       <div className="flex gap-2">
         {CHAINS.map((c) => (
@@ -43,8 +48,8 @@ export default function ActividadPage() {
             className={cn(
               "min-h-11 flex-1 rounded-md border text-sm",
               chain === c
-                ? "border-blue-600 bg-blue-600 text-white"
-                : "border-zinc-200 bg-white text-zinc-900"
+                ? "border-primary bg-primary text-primary-foreground"
+                : "border-border bg-card text-foreground"
             )}
           >
             {CHAIN_LABELS[c]}
@@ -61,8 +66,8 @@ export default function ActividadPage() {
 
       {!isLoading && entries && entries.length === 0 && (
         <div className="flex flex-col items-center gap-2 py-12 text-center">
-          <p className="text-base font-semibold text-zinc-900">Todavía no hay movimientos</p>
-          <p className="text-sm text-zinc-500">
+          <p className="text-base font-semibold text-foreground">Todavía no hay movimientos</p>
+          <p className="text-sm text-muted-foreground">
             Cuando envíes o recibas ARGt en esta red, lo vas a ver acá.
           </p>
         </div>
@@ -71,13 +76,13 @@ export default function ActividadPage() {
       {!isLoading && entries && entries.length > 0 && (
         <ul className="flex flex-col gap-2">
           {entries.map((entry) => (
-            <li key={entry.hash} className="rounded-lg bg-zinc-100 p-4">
+            <li key={entry.hash} className="rounded-lg border border-border bg-card p-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-500">
+                <span className="text-sm text-muted-foreground">
                   {entry.direction === "sent" ? "Enviado a" : "Recibido de"}{" "}
                   <span className="font-mono">{truncateAddress(entry.counterparty)}</span>
                 </span>
-                <span className="tabular-nums text-base text-zinc-900">
+                <span className="tabular-nums text-base text-foreground">
                   {entry.direction === "sent" ? "-" : "+"}
                   {formatUnits(entry.amount, TOKENS.ARGt.decimals)} {TOKENS.ARGt.symbol}
                 </span>
@@ -86,7 +91,7 @@ export default function ActividadPage() {
                 href={`${EXPLORER_TX_URL[chain]}${entry.hash}`}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-1 inline-block text-sm text-blue-600"
+                className="mt-1 inline-block text-sm text-gold"
               >
                 Ver en el explorer
               </a>

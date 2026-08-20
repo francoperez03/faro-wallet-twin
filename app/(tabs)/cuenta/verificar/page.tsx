@@ -8,10 +8,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { recomputeCommitment } from "@/lib/poseidon2/commit";
 
 // ponytail: verde/rojo no están en 01-UI-SPEC.md; misma extensión mínima que
-// components/cuenta/solvency-badge.tsx (SOL-03), gris usa la paleta zinc existente.
+// components/cuenta/solvency-badge.tsx (SOL-03), ahora sobre los tokens gold/green.
 const STATUS_STYLES = {
-  verde: "border-transparent bg-[#16A34A] text-white",
-  rojo: "border-transparent bg-red-600 text-white",
+  verde: "border-transparent bg-green-dim text-green",
+  rojo: "border-transparent bg-destructive/10 text-destructive",
 } as const;
 
 type Opening = {
@@ -71,7 +71,7 @@ export default function VerificarPage() {
 
   if (!ready || status === "loading") {
     return (
-      <div className="flex flex-col gap-4 p-6">
+      <div className="mx-auto flex w-full max-w-lg flex-col gap-4 p-6 lg:max-w-xl lg:p-8">
         <Skeleton className="h-8 w-40" />
         <Skeleton className="h-24 w-full" />
       </div>
@@ -85,10 +85,15 @@ export default function VerificarPage() {
     : undefined;
 
   return (
-    <div className="flex flex-col gap-6 p-6">
-      <h1 className="text-xl font-semibold text-zinc-900">Verificá tu inclusión</h1>
+    <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
+      <div>
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+          // FARO / VERIFICAR
+        </p>
+        <h1 className="font-serif text-3xl text-foreground">Verificá tu inclusión</h1>
+      </div>
 
-      {status === "error" && <p className="text-sm text-zinc-500">No pudimos pedir tu opening. Reintentá.</p>}
+      {status === "error" && <p className="text-sm text-muted-foreground">No pudimos pedir tu opening. Reintentá.</p>}
 
       {(status === "match" || status === "mismatch") && (
         <Badge className={STATUS_STYLES[status === "match" ? "verde" : "rojo"]}>
@@ -97,16 +102,16 @@ export default function VerificarPage() {
       )}
 
       {status === "mismatch" && mailto && (
-        <Button asChild variant="outline" className="w-fit border-red-600 text-red-600 hover:text-red-600">
+        <Button asChild variant="outline" className="w-fit border-destructive text-destructive hover:text-destructive">
           <a href={mailto}>Reportar discrepancia</a>
         </Button>
       )}
 
       {opening?.synthetic && (
-        <p className="text-sm text-zinc-500">Corte sintético (era fixture, sin corte real todavía).</p>
+        <p className="text-sm text-muted-foreground">Corte sintético (era fixture, sin corte real todavía).</p>
       )}
 
-      <div className="rounded-lg bg-zinc-100 p-4 text-sm text-zinc-700">
+      <div className="rounded-lg border border-border bg-card p-4 text-sm text-foreground/80">
         Verificás que tu opening abre contra tu commitment servido por el backend. Los commitments
         individuales no están on-chain (solo el acumulado del corte), así que la garantía contra omisión
         la da el binding del auditor, no la cadena sola.
