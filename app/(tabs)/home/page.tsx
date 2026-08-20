@@ -385,7 +385,7 @@ export default function HomePage() {
                         className="flex min-h-11 w-full items-center justify-between text-left"
                       >
                         <span className="text-sm font-semibold text-foreground">
-                          Por red
+                          Ver por red
                         </span>
                         <ChevronDown
                           aria-hidden="true"
