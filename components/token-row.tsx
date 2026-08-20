@@ -22,11 +22,13 @@ export function TokenRow({
 }) {
   return (
     <div className="flex items-center justify-between py-2">
-      <span className="text-sm text-zinc-500">{CHAIN_LABELS[chain]}</span>
+      <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+        {CHAIN_LABELS[chain]}
+      </span>
       {error ? (
-        <span className="text-sm text-red-600">no se pudo leer el saldo en {CHAIN_LABELS[chain]}</span>
+        <span className="text-sm text-destructive">no se pudo leer el saldo en {CHAIN_LABELS[chain]}</span>
       ) : (
-        <span className="tabular-nums text-base text-zinc-900">
+        <span className="tabular-nums text-base text-foreground">
           {formatUnits(balance, decimals)} {symbol}
         </span>
       )}

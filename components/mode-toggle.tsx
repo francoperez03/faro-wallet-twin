@@ -12,7 +12,7 @@ export function ModeToggle() {
   const { mode, setMode } = useCuentaMode();
 
   return (
-    <div className="flex gap-1 rounded-lg bg-zinc-100 p-1" role="tablist">
+    <div className="flex gap-1 rounded-lg bg-secondary p-1" role="tablist">
       {OPTIONS.map(({ value, label, ariaLabel }) => (
         <button
           key={value}
@@ -23,7 +23,7 @@ export function ModeToggle() {
           onClick={() => setMode(value)}
           className={cn(
             "min-h-11 flex-1 rounded-md text-sm font-semibold transition-colors",
-            mode === value ? "bg-blue-600 text-white" : "text-zinc-500"
+            mode === value ? "bg-gold-dim text-gold" : "text-muted-foreground"
           )}
         >
           {label}

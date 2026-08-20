@@ -13,7 +13,7 @@ export function BalanceList({
   symbol: string;
 }) {
   return (
-    <div className="rounded-lg bg-zinc-100 px-4">
+    <div className="rounded-lg border border-border bg-card px-4">
       {CHAINS.map((chain) => (
         <TokenRow
           key={chain}

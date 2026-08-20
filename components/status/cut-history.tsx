@@ -8,21 +8,21 @@ function explorerTxUrl(chainId: number, txHash: string): string | null {
 
 export function CutHistory({ history, chainId }: { history: CutHistoryEntry[]; chainId: number }) {
   if (history.length === 0) {
-    return <p className="text-sm text-zinc-500">Todavía no hay cortes publicados.</p>;
+    return <p className="text-sm text-muted-foreground">Todavía no hay cortes publicados.</p>;
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="flex flex-col gap-2 lg:grid lg:grid-cols-2 lg:gap-4">
       {[...history].reverse().map((entry) => {
         const txUrl = explorerTxUrl(chainId, entry.transactionHash);
         const publishedAt = new Date(Number(entry.publishedAt) * 1000);
         return (
-          <li key={entry.corteId} className="rounded-lg bg-zinc-100 p-3 text-sm">
-            <p className="font-mono text-xs text-zinc-500">{entry.corteId}</p>
+          <li key={entry.corteId} className="rounded-lg border border-border bg-card p-3 text-sm">
+            <p className="font-mono text-xs text-muted-foreground">{entry.corteId}</p>
             <div className="mt-1 flex items-center justify-between">
-              <span className="text-zinc-700">{publishedAt.toLocaleString("es-AR")}</span>
+              <span className="text-foreground/80">{publishedAt.toLocaleString("es-AR")}</span>
               {txUrl && (
-                <a href={txUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600">
+                <a href={txUrl} target="_blank" rel="noopener noreferrer" className="text-gold">
                   Ver tx
                 </a>
               )}

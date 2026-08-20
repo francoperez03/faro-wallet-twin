@@ -68,12 +68,12 @@ export function VaultCard() {
     return (
       <Card>
         <CardContent className="flex flex-col gap-2 p-4">
-          <h2 className="text-lg font-semibold text-zinc-900">
+          <h2 className="text-lg font-semibold text-foreground">
             Todavía no tenés ARGt en la bóveda
           </h2>
-          <p className="text-sm text-zinc-500">Depositá ARGt y empezá a generar rendimiento.</p>
+          <p className="text-sm text-muted-foreground">Depositá ARGt y empezá a generar rendimiento.</p>
           {hasArgtElsewhere && (
-            <p className="text-sm text-zinc-500">
+            <p className="text-sm text-muted-foreground">
               Tenés ARGt en otra red. Bridgeá a Arbitrum para depositar.
             </p>
           )}
@@ -85,15 +85,15 @@ export function VaultCard() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-2 p-4">
-        <p className="text-sm text-zinc-500">Tu posición</p>
-        <p className="tabular-nums text-2xl font-semibold text-zinc-900">
+        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Tu posición</p>
+        <p className="tabular-nums font-serif text-2xl text-gold">
           {formatUnits(valueInArgt, TOKENS.ARGt.decimals)} ARGt
         </p>
-        <Link href={MORPHO_VAULT_URL} target="_blank" className="text-sm text-blue-600">
+        <Link href={MORPHO_VAULT_URL} target="_blank" className="text-sm text-gold">
           Ver en Morpho
         </Link>
         {hasArgtElsewhere && (
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             Tenés ARGt en otra red. Bridgeá a Arbitrum para depositar más.
           </p>
         )}

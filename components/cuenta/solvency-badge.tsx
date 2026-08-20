@@ -7,11 +7,9 @@ import { Button } from "@/components/ui/button";
 import { REGISTRIES } from "@/lib/config/tokens";
 import { useLatestCut } from "@/lib/sobrecito/use-registry";
 
-// ponytail: verde/ámbar no están en la paleta de 01-UI-SPEC.md; extensión mínima
-// necesaria para este semáforo (SOL-03), no decorativa.
-const STATUS_STYLES = {
-  green: "border-transparent bg-[#16A34A] text-white",
-  amber: "border-transparent bg-[#D97706] text-white",
+const DOT_STYLES = {
+  green: "bg-green",
+  amber: "bg-amber",
 } as const;
 
 export function SolvencyBadge() {
@@ -25,13 +23,15 @@ export function SolvencyBadge() {
   return (
     <div className="flex flex-col gap-2">
       {status === "none" ? (
-        <p className="text-sm text-zinc-500">Todavía no hay un corte publicado.</p>
+        <p className="text-sm text-muted-foreground">Todavía no hay un corte publicado.</p>
       ) : (
-        <Badge className={STATUS_STYLES[status]}>
-          Solvencia probada on-chain · último corte hace {Math.max(0, Math.round(hoursAgo ?? 0))} h
+        <Badge className="items-center gap-2 border border-border bg-card text-foreground">
+          <span className={`h-1.5 w-1.5 rounded-full ${DOT_STYLES[status]}`} />
+          Solvencia probada on-chain · último corte hace{" "}
+          <span className="font-mono">{Math.max(0, Math.round(hoursAgo ?? 0))} h</span>
         </Badge>
       )}
-      <Button asChild variant="link" className="h-auto w-fit p-0 text-blue-600">
+      <Button asChild variant="link" className="h-auto w-fit p-0 text-gold">
         <Link href="/cuenta/verificar">Verificá tu inclusión</Link>
       </Button>
     </div>
