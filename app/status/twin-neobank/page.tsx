@@ -8,6 +8,7 @@ import { CutHistory } from "@/components/status/cut-history";
 import { DeclaredMask } from "@/components/status/declared-mask";
 import { REGISTRIES } from "@/lib/config/tokens";
 import { useLatestCut, useCutHistory } from "@/lib/sobrecito/use-registry";
+import { DisclosureFooter } from "@/components/disclosure-footer";
 
 const SYNTHETIC_LABEL_RE = /fixture|sint(é|e)tic/i;
 
@@ -70,6 +71,7 @@ function StatusForRegistry({ registry }: { registry: (typeof REGISTRIES)[number]
         <p className="mb-2 text-sm text-zinc-500">Historial de cortes</p>
         {isLoadingHistory ? <Skeleton className="h-24 w-full" /> : <CutHistory history={history} chainId={registry.chainId} />}
       </div>
+      <DisclosureFooter className="border-0 bg-transparent px-0" />
     </div>
   );
 }
