@@ -4,25 +4,33 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, Send, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-const TABS = [
-  { href: "/home", label: "Home", ariaLabel: "Ir a Home", icon: Home },
-  { href: "/enviar", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send },
-  { href: "/rendimiento", label: "Rendimiento", ariaLabel: "Ir a Rendimiento", icon: TrendingUp },
-  { href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight },
-  { href: "/actividad", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered },
-];
+import { ModeToggle } from "@/components/mode-toggle";
+import { useCuentaMode } from "@/lib/hooks/use-cuenta-mode";
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { mode } = useCuentaMode();
+  const homeHref = mode === "cuenta" ? "/cuenta" : "/home";
+
+  const TABS = [
+    { href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home },
+    { href: "/enviar", label: "Enviar", ariaLabel: "Ir a Enviar", icon: Send },
+    { href: "/rendimiento", label: "Rendimiento", ariaLabel: "Ir a Rendimiento", icon: TrendingUp },
+    { href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight },
+    { href: "/actividad", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered },
+  ];
 
   return (
     <div className="flex min-h-full flex-1 flex-col">
+      <div className="border-b border-zinc-100 bg-white p-4">
+        <ModeToggle />
+      </div>
       <main className="flex-1 pb-16">{children}</main>
       <nav className="fixed inset-x-0 bottom-0 border-t border-zinc-100 bg-white">
         <ul className="flex">
           {TABS.map(({ href, label, ariaLabel, icon: Icon }) => {
-            const active = pathname === href;
+            const active =
+              href === homeHref ? pathname === "/home" || pathname === "/cuenta" : pathname === href;
             return (
               <li key={href} className="flex-1">
                 <Link
