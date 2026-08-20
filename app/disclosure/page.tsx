@@ -7,7 +7,7 @@ export default function DisclosurePage() {
 
       <section className="flex flex-col gap-2">
         <p className="text-base text-zinc-900">
-          Twin Neobank es un PoC no auditado, construido para el hackathon
+          Faro es un PoC no auditado, construido para el hackathon
           &quot;Twin your Neobank&quot;.
         </p>
       </section>

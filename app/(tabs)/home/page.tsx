@@ -37,7 +37,7 @@ export default function HomePage() {
   if (!authenticated) {
     return (
       <div className="flex min-h-full flex-1 flex-col items-center justify-center gap-6 p-6 text-center">
-        <h1 className="text-2xl font-semibold text-zinc-900">Twin Neobank</h1>
+        <h1 className="text-2xl font-semibold text-zinc-900">Faro</h1>
         <Button onClick={() => login()} className="bg-blue-600 hover:bg-blue-700">
           Ingresar con email o Google
         </Button>

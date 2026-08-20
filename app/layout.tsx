@@ -16,8 +16,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Twin Neobank",
-  description: "Neobanco sobre las stablecoins de Twin",
+  title: "Faro",
+  description: "Faro, neobanco sobre las stablecoins de Twin. Solvencia probada on-chain.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

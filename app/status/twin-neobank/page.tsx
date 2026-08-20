@@ -81,7 +81,7 @@ export default function StatusPage() {
   return (
     <div className="mx-auto flex max-w-lg flex-col gap-6 p-6">
       <div>
-        <h1 className="text-[20px] font-semibold text-zinc-900">Solvencia de Twin Neobank</h1>
+        <h1 className="text-[20px] font-semibold text-zinc-900">Solvencia de Faro</h1>
         <p className="mt-1 text-sm text-zinc-500">
           Verificable por cualquiera, sin login, directo desde el SobrecitoRegistry on-chain.
         </p>
