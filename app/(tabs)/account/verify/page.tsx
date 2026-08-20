@@ -45,6 +45,7 @@ export default function VerificarPage() {
       setOpening(data);
 
       const balances = data.balances.map((b) => BigInt(b));
+      // arity [balance, reward]: fallback sintético también la respeta (ver route.ts).
       const salt = BigInt(data.salt);
       const mine = recomputeCommitment(balances, salt);
       setRecomputed(mine);
@@ -96,6 +97,17 @@ export default function VerificarPage() {
         <Badge className={STATUS_STYLES[status === "match" ? "verde" : "rojo"]}>
           {status === "match" ? "Tu saldo está incluido" : "Discrepancia detectada"}
         </Badge>
+      )}
+
+      {opening && (status === "match" || status === "mismatch") && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-foreground tabular-nums">
+            Tu balance base: {opening.balances[0] ?? "0"} · Tu reward: {opening.balances[1] ?? "0"}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tu reward es tu parte exacta del rendimiento del vault en el período.
+          </p>
+        </div>
       )}
 
       {status === "mismatch" && mailto && (

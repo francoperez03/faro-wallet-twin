@@ -52,11 +52,12 @@ export async function GET(req: NextRequest) {
 
   const rows = await sql`select argt_balance from accounts where user_id = ${userId}`;
   const balance = rows[0] ? BigInt(rows[0].argt_balance) : BigInt(0);
+  const reward = BigInt(0);
 
-  const commitment = recomputeCommitment([balance], salt);
+  const commitment = recomputeCommitment([balance, reward], salt);
 
   return NextResponse.json({
-    balances: [balance.toString()],
+    balances: [balance.toString(), reward.toString()],
     salt: salt.toString(),
     corteId: SYNTHETIC_CORTE_ID,
     commitment: commitment.toString(),

@@ -6,15 +6,18 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CutHistory } from "@/components/status/cut-history";
 import { DeclaredMask } from "@/components/status/declared-mask";
+import { YieldComparison } from "@/components/status/yield-comparison";
 import { REGISTRIES } from "@/lib/config/tokens";
 import { useLatestCut, useCutHistory } from "@/lib/sobrecito/use-registry";
 
 const SYNTHETIC_LABEL_RE = /fixture|sint(é|e)tic/i;
+const YIELD_LABEL_RE = /rendimiento|yield/i;
 
 function StatusForRegistry({ registry }: { registry: (typeof REGISTRIES)[number] }) {
-  const { cut, hoursAgo, status, isLoading } = useLatestCut(registry);
+  const { cut, corteId, hoursAgo, status, isLoading } = useLatestCut(registry);
   const { history, isLoading: isLoadingHistory } = useCutHistory(registry);
   const isSynthetic = SYNTHETIC_LABEL_RE.test(registry.label);
+  const isYield = YIELD_LABEL_RE.test(registry.label);
 
   if (isLoading) {
     return <Skeleton className="h-32 w-full" />;
@@ -39,6 +42,10 @@ function StatusForRegistry({ registry }: { registry: (typeof REGISTRIES)[number]
               {status === "amber" && <span className="ml-2 text-sm font-normal text-amber">vencido</span>}
             </p>
           </div>
+
+          {isYield && corteId && (
+            <YieldComparison cut={cut} corteId={corteId} history={history} />
+          )}
 
           <div className="rounded-lg border border-border bg-card p-4">
             <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">Veredictos</p>
