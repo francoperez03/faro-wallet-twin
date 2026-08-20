@@ -68,71 +68,81 @@ export function useActivity(address: `0x${string}` | undefined) {
         CHAINS.map(async (chain): Promise<ActivityEntry[] | null> => {
           const client = getPublicClient(config, { chainId: CHAIN_IDS[chain] });
           if (!client) return null;
-          try {
-            const latest = await client.getBlockNumber();
-            const addresses = TOKEN_KEYS.map(
-              (token) => TOKENS[token].addresses[chain],
-            );
-            const tokenByAddress = new Map(
-              TOKEN_KEYS.map((token) => [
-                TOKENS[token].addresses[chain].toLowerCase(),
-                token,
-              ]),
-            );
-            const toEntry =
-              (direction: "sent" | "received") => (log: TransferLog) => ({
-                hash: log.transactionHash,
-                token:
-                  tokenByAddress.get(log.address.toLowerCase()) ??
-                  TOKEN_KEYS[0],
-                chain,
-                direction,
-                counterparty: (direction === "sent"
-                  ? log.args.to
-                  : log.args.from) as `0x${string}`,
-                amount: log.args.value as bigint,
-                blockNumber: log.blockNumber,
-              });
-            // Chunks en secuencia (2 llamadas cada uno): los RPC públicos cortan por rate limit
-            // si se disparan todos juntos. El primer chunk usa "latest" porque el head de los
-            // nodos balanceados puede ir detrás del getBlockNumber.
-            const raw: Omit<ActivityEntry, "timestamp">[][] = [];
-            for (const [i, { fromBlock, toBlock }] of chunks(
-              latest,
-              chain,
-            ).entries()) {
-              const common = {
-                address: addresses,
-                event: TRANSFER_EVENT,
-                fromBlock,
-                ...(i === 0 ? { toBlock: "latest" as const } : { toBlock }),
-              };
-              const [sent, received] = await Promise.all([
-                client.getLogs({ ...common, args: { from: address } }),
-                client.getLogs({ ...common, args: { to: address } }),
-              ]);
-              raw.push(
-                sent.map(toEntry("sent")),
-                received.map(toEntry("received")),
+          // Los RPC públicos cortan por rate limit cuando balances y actividad salen juntos:
+          // dos reintentos con backoff antes de marcar la red como caída.
+          for (let attempt = 0; attempt < 3; attempt++) {
+            try {
+              const latest = await client.getBlockNumber();
+              const addresses = TOKEN_KEYS.map(
+                (token) => TOKENS[token].addresses[chain],
               );
+              const tokenByAddress = new Map(
+                TOKEN_KEYS.map((token) => [
+                  TOKENS[token].addresses[chain].toLowerCase(),
+                  token,
+                ]),
+              );
+              const toEntry =
+                (direction: "sent" | "received") => (log: TransferLog) => ({
+                  hash: log.transactionHash,
+                  token:
+                    tokenByAddress.get(log.address.toLowerCase()) ??
+                    TOKEN_KEYS[0],
+                  chain,
+                  direction,
+                  counterparty: (direction === "sent"
+                    ? log.args.to
+                    : log.args.from) as `0x${string}`,
+                  amount: log.args.value as bigint,
+                  blockNumber: log.blockNumber,
+                });
+              // Chunks en secuencia (2 llamadas cada uno): los RPC públicos cortan por rate limit
+              // si se disparan todos juntos. El primer chunk usa "latest" porque el head de los
+              // nodos balanceados puede ir detrás del getBlockNumber.
+              const raw: Omit<ActivityEntry, "timestamp">[][] = [];
+              for (const [i, { fromBlock, toBlock }] of chunks(
+                latest,
+                chain,
+              ).entries()) {
+                const common = {
+                  address: addresses,
+                  event: TRANSFER_EVENT,
+                  fromBlock,
+                  ...(i === 0 ? { toBlock: "latest" as const } : { toBlock }),
+                };
+                const [sent, received] = await Promise.all([
+                  client.getLogs({ ...common, args: { from: address } }),
+                  client.getLogs({ ...common, args: { to: address } }),
+                ]);
+                raw.push(
+                  sent.map(toEntry("sent")),
+                  received.map(toEntry("received")),
+                );
+              }
+              const entries = raw.flat();
+              const blocks = [...new Set(entries.map((e) => e.blockNumber))];
+              const stamps = new Map(
+                await Promise.all(
+                  blocks.map(async (blockNumber) => {
+                    const block = await client.getBlock({ blockNumber });
+                    return [blockNumber, Number(block.timestamp)] as const;
+                  }),
+                ),
+              );
+              return entries.map((e) => ({
+                ...e,
+                timestamp: stamps.get(e.blockNumber) ?? 0,
+              }));
+            } catch (err) {
+              console.warn(
+                `[activity] ${chain} intento ${attempt + 1} falló`,
+                err,
+              );
+              if (attempt < 2)
+                await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
             }
-            const entries = raw.flat();
-            const blocks = [...new Set(entries.map((e) => e.blockNumber))];
-            const stamps = new Map(
-              await Promise.all(
-                blocks.map(async (blockNumber) => {
-                  const block = await client.getBlock({ blockNumber });
-                  return [blockNumber, Number(block.timestamp)] as const;
-                }),
-              ),
-            );
-            return entries.map((e) => ({
-              ...e,
-              timestamp: stamps.get(e.blockNumber) ?? 0,
-            }));
-          } catch {
-            return null;
           }
+          return null;
         }),
       );
 
