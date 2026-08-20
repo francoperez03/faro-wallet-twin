@@ -7,7 +7,6 @@ import { formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Toaster } from "@/components/ui/sonner";
 import { CHAINS, CHAIN_IDS, TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { cn } from "@/lib/utils";
@@ -172,7 +171,6 @@ export default function EnviarPage() {
         {isSubmitting ? "Enviando..." : "Enviar ARGt"}
       </Button>
 
-      <Toaster />
     </div>
   );
 }
