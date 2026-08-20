@@ -12,7 +12,10 @@ import { DEPOSIT_CHAIN, OMNIBUS_VAULT_ADDRESS } from "@/lib/config/cuenta";
 import { vaultAbi } from "@/lib/hooks/use-vault-position";
 import { VAULT_ARGT_PRIME } from "@/lib/config/tokens";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
+import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -35,6 +38,11 @@ const POLL_INTERVAL_MS = 5000;
 const POLL_MAX_ATTEMPTS = 12;
 
 type AccountData = { argtBalance: bigint; interestAccrued: bigint };
+type RewardsAction = "depositar" | "retirar";
+
+const NONE = "none";
+const TAB_TRIGGER =
+  "min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
 type DepositStatus = "idle" | "sending" | "confirming" | "acreditado" | "timeout";
 
 export function RewardsPanel() {
@@ -45,6 +53,8 @@ export function RewardsPanel() {
   const { perChain } = useTokenBalances(address);
 
   const [account, setAccount] = useState<AccountData | null>(null);
+  const [action, setAction] = useState<RewardsAction | null>(null);
+  const actionRef = useRevealAnimation<HTMLDivElement>(action !== null);
   const [apy, setApy] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -191,81 +201,123 @@ export function RewardsPanel() {
   }
 
   const isDepositing = depositStatus === "sending" || depositStatus === "confirming";
+  const saldo = account?.argtBalance ?? BigInt(0);
+  const rewards = account?.interestAccrued ?? BigInt(0);
+  const rate =
+    omnibusValue !== undefined ? Number(formatUnits(omnibusValue, decimals)).toFixed(4) : null;
 
   return (
     <div className="flex w-full flex-col gap-6">
-      <div>
-        <h1 className="font-serif text-3xl text-foreground">Rewards</h1>
-      </div>
+      <h1 className="font-serif text-3xl text-foreground">Rewards</h1>
 
       <div className="rounded-lg border border-border bg-card p-4">
-        <p className="text-sm text-muted-foreground">Tu saldo en Cuenta</p>
-        <p className="mt-1 text-[28px] font-serif leading-tight tracking-tight text-gold tabular-nums">
-          {formatUnits(account?.argtBalance ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
-        </p>
-        <p className="mt-3 text-sm text-muted-foreground">Rewards acumulados</p>
-        <p className="mt-1 text-lg font-semibold text-foreground tabular-nums">
-          {formatUnits(account?.interestAccrued ?? BigInt(0), decimals)} {TOKENS.ARGt.symbol}
-        </p>
-        {apy != null && (
-          <p className="mt-1 text-sm text-muted-foreground">{(apy * 100).toFixed(2)}% anual</p>
-        )}
-        <p className="mt-3 text-sm text-foreground/80">Tus rewards son el rendimiento real de Morpho</p>
-        <Button asChild variant="outline" className="mt-3 w-fit">
-          <Link href="/account/verify">Verificar mis rewards</Link>
-        </Button>
-      </div>
-
-      {omnibusValue !== undefined && (
-        <div className="rounded-lg border border-border bg-card p-4">
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            Posición del pool en Morpho
-          </p>
-          <p className="mt-1 tabular-nums font-serif text-xl text-foreground">
-            1 ARGt → {formatUnits(omnibusValue, decimals)} ARGt
-          </p>
+        <div className="flex items-center justify-between">
+          <p className="text-sm text-muted-foreground">Saldo en Rewards</p>
+          {apy != null && (
+            <span className="inline-flex items-center gap-1.5 rounded-[3px] bg-green-dim px-1.5 py-0.5 font-mono text-[11px] text-green">
+              <span className="size-1.5 rounded-full bg-green" aria-hidden="true" />
+              APY {(apy * 100).toFixed(2).replace(".", ",")}%
+            </span>
+          )}
         </div>
-      )}
-
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-        <p className="text-sm font-medium text-foreground">Pasar a Cuenta</p>
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="Monto en ARGt"
-          value={depositAmount}
-          onChange={(event) => setDepositAmount(event.target.value)}
-          disabled={isDepositing}
-        />
-        <p className="text-sm text-muted-foreground">
-          Disponible: <span className="tabular-nums">{formatUnits(balanceOnArbitrum, decimals)}</span>{" "}
-          {TOKENS.ARGt.symbol}
+        <p
+          className="mt-1 text-[28px] font-serif leading-tight tracking-tight text-gold tabular-nums"
+          style={{ minWidth: "8ch" }}
+        >
+          {formatUnits(saldo, decimals)} {TOKENS.ARGt.symbol}
         </p>
-        <Button onClick={handleDeposit} disabled={!address || isDepositing || !depositAmount}>
-          {depositStatus === "sending" && "Enviando..."}
-          {depositStatus === "confirming" && "Confirmando..."}
-          {(depositStatus === "idle" || depositStatus === "acreditado" || depositStatus === "timeout") &&
-            "Pasar a Cuenta"}
-        </Button>
-        {depositStatus === "acreditado" && <p className="text-sm text-gold">Acreditado</p>}
-        {depositStatus === "timeout" && (
-          <p className="text-sm text-muted-foreground">Puede tardar unos minutos, va a aparecer arriba.</p>
-        )}
-      </div>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Rewards acumulados{" "}
+          <span className="font-semibold text-green tabular-nums">
+            +{formatUnits(rewards, decimals)} {TOKENS.ARGt.symbol}
+          </span>
+        </p>
 
-      <div className="flex flex-col gap-3 rounded-lg border border-border bg-card p-4">
-        <p className="text-sm font-medium text-foreground">Retirar</p>
-        <Input
-          type="number"
-          inputMode="decimal"
-          placeholder="Monto en ARGt"
-          value={withdrawAmount}
-          onChange={(event) => setWithdrawAmount(event.target.value)}
-          disabled={isWithdrawing}
-        />
-        <Button onClick={handleWithdraw} disabled={isWithdrawing || !withdrawAmount}>
-          {isWithdrawing ? "Retirando..." : "Retirar"}
-        </Button>
+        <Tabs
+          value={action ?? NONE}
+          onValueChange={(next) => setAction(next === NONE ? null : (next as RewardsAction))}
+          className="mt-4 gap-3 border-t border-border pt-4"
+        >
+          <TabsList className="h-11 w-full gap-1 rounded-lg border border-border bg-background p-1">
+            <TabsTrigger value="depositar" className={TAB_TRIGGER}>
+              <ArrowDownLeft className="size-4" aria-hidden="true" />
+              Depositar
+            </TabsTrigger>
+            <TabsTrigger value="retirar" className={TAB_TRIGGER}>
+              <ArrowUpRight className="size-4" aria-hidden="true" />
+              Retirar
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="depositar">
+            <div ref={action === "depositar" ? actionRef : undefined} className="flex flex-col gap-3">
+              <Input
+                type="number"
+                inputMode="decimal"
+                aria-label="Monto a depositar en ARGt"
+                placeholder="Monto en ARGt"
+                value={depositAmount}
+                onChange={(event) => setDepositAmount(event.target.value)}
+                disabled={isDepositing}
+                className="min-h-11"
+              />
+              <p className="text-sm text-muted-foreground">
+                Disponible:{" "}
+                <span className="tabular-nums">{formatUnits(balanceOnArbitrum, decimals)}</span>{" "}
+                {TOKENS.ARGt.symbol}
+              </p>
+              <Button onClick={handleDeposit} disabled={!address || isDepositing || !depositAmount}>
+                {depositStatus === "sending" && "Enviando..."}
+                {depositStatus === "confirming" && "Confirmando..."}
+                {(depositStatus === "idle" ||
+                  depositStatus === "acreditado" ||
+                  depositStatus === "timeout") &&
+                  "Depositar"}
+              </Button>
+              {depositStatus === "acreditado" && <p className="text-sm text-green">Acreditado</p>}
+              {depositStatus === "timeout" && (
+                <p className="text-sm text-muted-foreground">
+                  Puede tardar unos minutos, va a aparecer arriba.
+                </p>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="retirar">
+            <div ref={action === "retirar" ? actionRef : undefined} className="flex flex-col gap-3">
+              <Input
+                type="number"
+                inputMode="decimal"
+                aria-label="Monto a retirar en ARGt"
+                placeholder="Monto en ARGt"
+                value={withdrawAmount}
+                onChange={(event) => setWithdrawAmount(event.target.value)}
+                disabled={isWithdrawing}
+                className="min-h-11"
+              />
+              <Button onClick={handleWithdraw} disabled={isWithdrawing || !withdrawAmount}>
+                {isWithdrawing ? "Retirando..." : "Retirar"}
+              </Button>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+          {rate !== null ? (
+            <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+              1 ARGt <span aria-hidden="true">&rarr;</span>{" "}
+              <span className="tabular-nums normal-case">{rate}</span> ARGt en Morpho
+            </p>
+          ) : (
+            <span />
+          )}
+          <Link
+            href="/account/verify"
+            className="min-h-11 content-center text-sm text-gold underline-offset-4 hover:underline"
+          >
+            Verificar mis rewards
+          </Link>
+        </div>
       </div>
     </div>
   );
