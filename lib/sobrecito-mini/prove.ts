@@ -67,8 +67,13 @@ export async function runCorteMini(): Promise<CorteMiniResult> {
 
   type UserRow = { userId: string; argt: bigint; bolt: bigint; salt: bigint; commitment: bigint };
   const users: UserRow[] = rows.map((row) => {
-    const argt = BigInt(row.argt_balance);
-    const bolt = BigInt(row.bolt_balance);
+    // BAL_SCALE: el circuito mini rangea a BAL_BITS=48; los base units 1e18 no entran.
+    // Se trunca a 8 decimales (1e10), el formato Lemon de Sobrecito (RF-P1): 50.000 ARGt
+    // = 5e12 unidades < 2^48. El commitment, el witness y la fila de openings usan el
+    // MISMO valor escalado, así el recompute del browser cierra sin cambios.
+    const BAL_SCALE = BigInt(10) ** BigInt(10);
+    const argt = BigInt(row.argt_balance) / BAL_SCALE;
+    const bolt = BigInt(row.bolt_balance) / BAL_SCALE;
     const salt = deriveSalt(row.user_id);
     const commitment = recomputeCommitment([argt, bolt], salt);
     return { userId: row.user_id, argt, bolt, salt, commitment };
