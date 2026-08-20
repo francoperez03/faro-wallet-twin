@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { usePrivy } from "@privy-io/react-auth";
 import { animate } from "animejs";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ChevronDown } from "lucide-react";
 import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,6 +23,7 @@ import { Faro } from "@/components/faro";
 import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
+import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
 import { TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { truncateAddress } from "@/lib/utils";
 
@@ -42,6 +43,8 @@ export default function HomePage() {
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const [sendChain, setSendChain] = useState<ChainKey | undefined>(undefined);
+  const [showBreakdown, setShowBreakdown] = useState(false);
+  const breakdownRef = useRevealAnimation<HTMLDivElement>(showBreakdown);
 
   const heroRef = useRef<HTMLParagraphElement>(null);
   const heroState = useRef({ value: 0 });
@@ -109,9 +112,6 @@ export default function HomePage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
       <div className="flex flex-col gap-6">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / HOME
-        </p>
 
         <div className="rounded-lg border border-border bg-card p-4">
           <p className="text-sm text-muted-foreground">Saldo total</p>
@@ -165,18 +165,39 @@ export default function HomePage() {
               </TabsContent>
             </Tabs>
           )}
+
+          {!isLoading && (
+            <div className="mt-4 border-t border-border pt-1">
+              <button
+                type="button"
+                aria-expanded={showBreakdown}
+                onClick={() => setShowBreakdown((v) => !v)}
+                className="flex min-h-11 w-full items-center justify-between text-left"
+              >
+                <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                  Por red
+                </span>
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`size-4 text-muted-foreground transition-transform duration-300 ${showBreakdown ? "rotate-180" : ""}`}
+                />
+              </button>
+              {showBreakdown && (
+                <div ref={breakdownRef} className="pb-2">
+                  <BalanceList
+                    perChain={perChain}
+                    errors={errors}
+                    decimals={TOKENS.ARGt.decimals}
+                    symbol={TOKENS.ARGt.symbol}
+                    address={walletAddress}
+                    onSend={openSendFor}
+                  />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {!isLoading && (
-          <BalanceList
-            perChain={perChain}
-            errors={errors}
-            decimals={TOKENS.ARGt.decimals}
-            symbol={TOKENS.ARGt.symbol}
-            address={walletAddress}
-            onSend={openSendFor}
-          />
-        )}
       </div>
 
       <div className="flex flex-col gap-6">

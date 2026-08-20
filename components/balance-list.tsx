@@ -22,7 +22,7 @@ export function BalanceList({
   const [expanded, setExpanded] = useState<ChainKey | null>(null);
 
   return (
-    <div className="rounded-lg border border-border bg-card px-4">
+    <div>
       {CHAINS.map((chain) => (
         <TokenRow
           key={chain}
