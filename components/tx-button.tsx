@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ComponentProps } from "react";
 import { Check, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -21,6 +21,7 @@ export function TxButton({
   onSettled,
   disabled = false,
   className,
+  variant,
 }: {
   label: string;
   successLabel?: string;
@@ -29,6 +30,7 @@ export function TxButton({
   onSettled?: () => void;
   disabled?: boolean;
   className?: string;
+  variant?: ComponentProps<typeof Button>["variant"];
 }) {
   const [held, setHeld] = useState<TxButtonStage>(stage);
   const settleTimer = useRef<number | null>(null);
@@ -55,6 +57,7 @@ export function TxButton({
     <Button
       type="button"
       size="lg"
+      variant={variant}
       className={cn(
         "w-full",
         held === "success" && "border border-green/50 bg-green-dim text-green disabled:opacity-100",
