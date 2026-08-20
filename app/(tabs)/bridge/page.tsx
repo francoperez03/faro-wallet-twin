@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Toaster } from "@/components/ui/sonner";
 import { CHAINS, TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useBridge, type BridgeStatus } from "@/lib/hooks/use-bridge";
@@ -214,8 +213,6 @@ export default function BridgePage() {
         </p>
       )}
       {error && <p className="text-sm text-red-600">{TX_ERROR}</p>}
-
-      <Toaster />
     </div>
   );
 }
