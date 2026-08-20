@@ -7,8 +7,7 @@ export default function DisclosurePage() {
 
       <section className="flex flex-col gap-2">
         <p className="text-base text-foreground">
-          Faro es un PoC no auditado, construido para el hackathon
-          &quot;Twin your Neobank&quot;.
+          Faro fue construido para el hackathon &quot;Twin your Neobank&quot;.
         </p>
       </section>
 
@@ -33,7 +32,7 @@ export default function DisclosurePage() {
         <h2 className="text-lg font-semibold text-foreground">Custodia de la clave de la bóveda</h2>
         <p className="text-base text-foreground">
           La clave privada de la bóveda vive en el servidor de esta demo, sin HSM ni esquema
-          multisig. Es un límite conocido de esta PoC, no una práctica recomendada para producción.
+          multisig, un esquema pensado para esta demo.
         </p>
       </section>
 

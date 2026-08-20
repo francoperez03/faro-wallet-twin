@@ -12,9 +12,8 @@ export function DisclosureFooter({ className }: { className?: string }) {
         className
       )}
     >
-      PoC de hackathon, no auditado.{" "}
       <Link href="/disclosure" className="text-gold underline">
-        Ver disclosure completo
+        Disclosure
       </Link>
     </footer>
   );
