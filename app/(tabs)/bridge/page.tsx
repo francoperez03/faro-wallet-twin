@@ -96,7 +96,7 @@ function MoverPanel({
   const { status, error, quoteFee, bridge } = useBridge();
 
   const [fromChain, setFromChain] = useState<ChainKey>("arbitrum");
-  const [toChain, setToChain] = useState<ChainKey>("base");
+  const [toChain, setToChain] = useState<ChainKey>("polygon");
   const [amount, setAmount] = useState("");
   const [fee, setFee] = useState<bigint | null>(null);
   const [feeError, setFeeError] = useState<string | null>(null);

@@ -83,7 +83,7 @@ export const VAULT_ARGT_PRIME = {
 // Adapters OFT de ARGt. Ethereum no tiene adapter conocido: el bridge solo ofrece BRIDGE_CHAINS.
 export const BRIDGE_ADAPTERS: Partial<Record<ChainKey, `0x${string}`>> = {
   arbitrum: "0x4821FBf47B261F0D52Ba0F941CF67b8648f82691",
-  base: "0xe80Af1d12426dB4394b147e04f179a38e7C5Dfe7",
+  // base: "0xe80Af1d12426dB4394b147e04f179a38e7C5Dfe7", // fuera del rebalance/bridge por ahora
   polygon: "0xD70ad085684b2A9f4B5d54D7BDB2ecA37a273216",
 };
 export const BRIDGE_CHAINS = CHAINS.filter((c) => Boolean(BRIDGE_ADAPTERS[c]));
