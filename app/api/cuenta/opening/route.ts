@@ -1,27 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { hkdfSync } from "crypto";
 import { verifyPrivyToken } from "@/lib/privy-server";
 import { sql } from "@/lib/db/client";
 import { recomputeCommitment } from "@/lib/poseidon2/commit";
-
-// Orden del subgrupo escalar de BN254 (Fr), el field que usa Poseidon2 en commitment_lib.
-const BN254_FR = BigInt(
-  "21888242871839275222246405745257275088548364400416034343698204186575808495617",
-);
+import { deriveSalt } from "@/lib/poseidon2/salt";
 
 // D-09: no hay corte real en la era fixture, la API sirve un opening on-the-fly con un
 // corte_id sintético fijo. Cuando exista el corte mini, esto pasa a leer una fila real
 // de `openings(corte_id, ...)` (el salt se sigue derivando on-the-fly, es determinístico).
 const SYNTHETIC_CORTE_ID = "fixture-sintetico";
-
-/** D-07: salt = HKDF-SHA256(SOBRECITO_MASTER_HEX, did), reducido al field de Poseidon2. Server-only. */
-function deriveSalt(did: string): bigint {
-  const masterHex = process.env.SOBRECITO_MASTER_HEX;
-  if (!masterHex) throw new Error("configurar SOBRECITO_MASTER_HEX");
-  const ikm = Buffer.from(masterHex, "hex");
-  const okm = hkdfSync("sha256", ikm, Buffer.alloc(0), Buffer.from(did, "utf8"), 32);
-  return BigInt("0x" + Buffer.from(okm).toString("hex")) % BN254_FR;
-}
 
 export async function GET(req: NextRequest) {
   let identity;
@@ -42,8 +28,28 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "configurar SOBRECITO_MASTER_HEX" }, { status: 500 });
   }
 
+  // D-09: si existe una fila de corte mini real para este usuario (la corrida más reciente
+  // que lo incluyó), servir esa fila en vez de recomputar sobre el balance actual. El salt
+  // se sigue derivando on-the-fly (determinístico por DID, no depende del corte).
   // T-04-04: el DID viene exclusivamente del access token verificado arriba, nunca de un
-  // param de la request, así que este SELECT nunca puede devolver el balance de otro usuario.
+  // param de la request, así que estos SELECT nunca pueden devolver el balance de otro usuario.
+  const openingRows = await sql`
+    select corte_id, balances, commitment from openings
+    where user_id = ${userId}
+    order by created_at desc
+    limit 1
+  `;
+  if (openingRows[0]) {
+    const row = openingRows[0];
+    return NextResponse.json({
+      balances: row.balances,
+      salt: salt.toString(),
+      corteId: row.corte_id,
+      commitment: row.commitment,
+      synthetic: false,
+    });
+  }
+
   const rows = await sql`select argt_balance from accounts where user_id = ${userId}`;
   const balance = rows[0] ? BigInt(rows[0].argt_balance) : BigInt(0);
 

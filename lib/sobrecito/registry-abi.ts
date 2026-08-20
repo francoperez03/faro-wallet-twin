@@ -43,6 +43,30 @@ export const registryAbi = [
     outputs: [{ name: "", type: "bytes32" }],
   },
   {
+    // Escritura (04-03-PLAN.md Task 3): publica un corte firmado por el publisher.
+    type: "function",
+    name: "publish",
+    stateMutability: "nonpayable",
+    inputs: [
+      {
+        name: "inp",
+        type: "tuple",
+        components: [
+          { name: "corteId", type: "bytes32" },
+          { name: "cL", type: "bytes32" },
+          { name: "cR", type: "bytes32" },
+          { name: "blockB", type: "uint64" },
+          { name: "verdicts", type: "uint8[]" },
+          { name: "coverageBps", type: "uint16[]" },
+          { name: "attestationHash", type: "bytes32" },
+        ],
+      },
+      { name: "proof", type: "bytes" },
+      { name: "publicInputs", type: "bytes32[]" },
+    ],
+    outputs: [],
+  },
+  {
     type: "event",
     name: "CutPublished",
     inputs: [

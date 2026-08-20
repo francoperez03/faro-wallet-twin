@@ -32,3 +32,19 @@ create table if not exists sync_state (
   key text primary key,
   value text
 );
+
+-- Corte mini (04-CONTEXT.md D-09): una fila por usuario incluido en cada corrida real
+-- del pipeline de circuits-mini/liabilities_batch_mini. balances = [argt_balance,
+-- bolt_balance] (mismo orden que el circuito), commitment = commit(balances, salt)
+-- calculado con el mismo Poseidon2 que el circuito (lib/poseidon2/commit.ts). Idempotente:
+-- correr el corte dos veces con el mismo corte_id no rompe (unique en la PK compuesta).
+create table if not exists openings (
+  corte_id text not null,
+  user_id text not null references accounts (user_id),
+  balances jsonb not null,
+  commitment text not null,
+  created_at timestamptz not null default now(),
+  primary key (corte_id, user_id)
+);
+
+create index if not exists openings_user_id_idx on openings (user_id);
