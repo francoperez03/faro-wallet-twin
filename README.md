@@ -1,10 +1,32 @@
 # Faro
 
-**A wallet for Twin stablecoins.**
+**Your money in digital pesos, in your pocket, with nobody holding it for you.**
 
 Live: **https://faro-wallet.vercel.app**
 
 Built in 24 hours for the *Twin your Neobank* hackathon at the LATAM Digital Assets Conference.
+
+---
+
+## The pitch
+
+Faro is a wallet on Twin stablecoins. Sign in with your email or Google and you have an account in ARGt and BOLt that works on Arbitrum, Base, Polygon and Ethereum. Send, receive, see every movement in one history, and when you want your money to earn, deposit it with two taps into the ARGt Prime vault on Morpho.
+
+The difference from a bank or an exchange: Faro never touches your funds. The wallet is yours, the vault shares sit in your name in the contract, and anyone can verify it on-chain. Faro puts the experience of a neobank on top of infrastructure that is transparent by design.
+
+- **What it is:** a neobank on Twin stablecoins, fully self-custodial, with balances, transfers, a Morpho vault and a bridge across four networks.
+- **What sets it apart:** the feel of a banking app (email login, one balance, one history) on funds that always stay in the user's wallet, even while they earn.
+- **Hackathon scope:** milestones 1, 2 and 3 as specified, plus BOLt and Ethereum as a bonus.
+
+### Demo script (2 minutes)
+
+1. **Sign in** (10 s). Email or Google, no seed phrase, no extension. Privy creates the wallet on first login. The lighthouse beam sweeps on the welcome screen.
+2. **Home** (20 s). Total balance, split between wallet and invested. Pick the currency by flag: Argentine pesos, Bolivianos. Expand *Por red* to see each chain with its native gas.
+3. **Send** (20 s). Any currency, any network. The app switches chains on its own and confirms on-chain. Send 1 ARGt on Arbitrum, show the toast and the explorer link.
+4. **Activity** (15 s). One history, currencies and networks interleaved, sorted by real block time, filterable. Point at the transfer just made and at an *Inversión en Rewards* entry.
+5. **Rewards** (30 s). The core of it. Deposit ARGt into the ARGt Prime vault on Morpho from your own wallet: one signature approves, one deposits. Balance, earnings and APY are read from the contract, never from a database of ours. Withdraw part or all at any time. Deposit 10 ARGt and watch the balance update in Rewards and in Home.
+6. **Move between networks** (15 s). Bridge ARGt between Arbitrum, Base and Polygon through Twin's adapters, fee quoted before signing. The rebalance planner turns a target split into the minimum set of legs. Show a quote.
+7. **Close** (10 s). Milestones 1, 2 and 3, plus BOLt and Ethereum. Open source, running at faro-wallet.vercel.app. Nobody holds your money: Faro only lights the way.
 
 ---
 
