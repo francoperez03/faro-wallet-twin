@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: planning
 stopped_at: Phases 1-4 complete and verified; 05-01/05-02 done; only 05-03 (user checkpoints: nombre, smoke, submission) remains
-last_updated: "2026-08-20T05:29:55.469710+00:00"
+last_updated: "2026-08-20T11:29:44.124695+00:00"
 last_activity: 2026-08-20 — All phases planned in parallel (16 plans), plan-checked, fixes applied and committed
 progress:
   total_phases: 5
@@ -54,6 +54,8 @@ Progress: [░░░░░░░░░░] 0%
 *Updated after each plan completion*
 
 ## Accumulated Context
+
+- Decisión (2026-08-20): el brandkit de app.twin.finance supersede la paleta light/blue de fase 1 (pedido del usuario). Dark único, naranja/oro/verde, Instrument Serif, sidebar desktop responsive. Ver apéndice en 01-UI-SPEC.md.
 
 ### Decisions
 

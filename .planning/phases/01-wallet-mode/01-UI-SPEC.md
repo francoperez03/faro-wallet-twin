@@ -133,3 +133,16 @@ No third-party registries declared for this phase. Registry vetting gate not tri
 - [x] Dimension 6 Registry Safety: PASS
 
 **Approval:** approved (gsd-ui-checker, 2026-08-19)
+
+---
+
+## Apéndice · Rebrand Twin (2026-08-20)
+
+A pedido del usuario, el brandkit de app.twin.finance supersede la paleta y el tema de este contrato. Analizado en vivo (computed styles + screenshot) e implementado:
+
+- **Tema único dark**: bg `#0D0D0D`, surfaces `#111111`/`#171717`, bordes crema al 8 %, texto `#F0EDE6`, muted `#9A948B`.
+- **Acentos**: naranja `#FF6600` (CTA primario, vía `--primary`), oro `#E2D79C` (valores hero, nav activa, links), verde `#3DBE7A` (badges, dots de status), ámbar para "declarado"/corte vencido.
+- **Tipografía**: se suma Instrument Serif (`--font-serif`) para H1 y cifras hero (mapea LT Superior Serif de Twin); Geist y Geist Mono se conservan. Labels de metadata en mono uppercase con tracking; breadcrumb-comentario `// FARO / PANTALLA` sobre cada H1.
+- **Responsive**: mobile conserva el tab bar inferior y los 44px de touch target; en `lg:` aparece sidebar de 230px (logo serif gold, secciones mono, item activo gold) + topbar con breadcrumb y pill de chains; contenido centrado con `max-w` y grids de 2 columnas en home/cuenta/rendimiento.
+- **Se conservan**: escala tipográfica 4 tamaños/2 pesos, espaciado múltiplo de 4, tabular-nums en montos, copy es-AR y sus reglas, semántica del semáforo (verde/ámbar).
+
