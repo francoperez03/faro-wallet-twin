@@ -12,12 +12,11 @@ export const CHAIN_IDS: Record<ChainKey, number> = {
 // Base y Ethereum). Override por env para producción.
 export const RPC_URLS: Record<ChainKey, string> = {
   arbitrum:
-    process.env.NEXT_PUBLIC_RPC_ARBITRUM ?? "https://arb1.arbitrum.io/rpc",
-  base: process.env.NEXT_PUBLIC_RPC_BASE ?? "https://mainnet.base.org",
+    process.env.NEXT_PUBLIC_RPC_ARBITRUM || "https://arb1.arbitrum.io/rpc",
+  base: process.env.NEXT_PUBLIC_RPC_BASE || "https://mainnet.base.org",
   polygon:
-    process.env.NEXT_PUBLIC_RPC_POLYGON ??
-    "https://polygon-bor-rpc.publicnode.com",
-  ethereum: process.env.NEXT_PUBLIC_RPC_ETHEREUM ?? "https://eth.drpc.org",
+    process.env.NEXT_PUBLIC_RPC_POLYGON || "https://polygon.drpc.org",
+  ethereum: process.env.NEXT_PUBLIC_RPC_ETHEREUM || "https://eth.drpc.org",
 };
 
 // Ventana del historial de actividad: ~48 h por red en bloques, y el span máximo que el RPC
