@@ -25,7 +25,7 @@ export default function RetirarPage() {
 
   const loadBalance = useCallback(async () => {
     const token = await getAccessToken();
-    const res = await fetch("/api/cuenta/account", { headers: { Authorization: `Bearer ${token}` } });
+    const res = await fetch("/api/account/account", { headers: { Authorization: `Bearer ${token}` } });
     if (res.ok) {
       const data = await res.json();
       setArgtBalance(BigInt(data.argtBalance));
@@ -69,7 +69,7 @@ export default function RetirarPage() {
     setFailReason(null);
     try {
       const token = await getAccessToken();
-      const res = await fetch("/api/cuenta/withdraw", {
+      const res = await fetch("/api/account/withdraw", {
         method: "POST",
         headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
         body: JSON.stringify({ amount: amountBigInt.toString(), chain }),
@@ -93,9 +93,6 @@ export default function RetirarPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / RETIRAR
-        </p>
         <h1 className="font-serif text-3xl text-foreground">Retirar</h1>
       </div>
 

@@ -3,24 +3,20 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { usePrivy } from "@privy-io/react-auth";
-import { Home, TrendingUp, ArrowLeftRight, ListOrdered } from "lucide-react";
+import { Home, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ModeToggle } from "@/components/mode-toggle";
-import { useCuentaMode } from "@/lib/hooks/use-cuenta-mode";
 import { HIDDEN_SECTIONS, PRODUCT_NAME } from "@/lib/config/app";
 
 export default function TabsLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { mode } = useCuentaMode();
   const { authenticated } = usePrivy();
-  const homeHref = mode === "cuenta" ? "/account" : "/home";
+  // ponytail: foco en Wallet por ahora; volver a useCuentaMode() para reactivar el modo Cuenta.
+  const homeHref = "/home";
 
   // id: sección de la prioridad de sacrificio de D-12 ('m1' -> Home nunca se oculta).
   const TABS = [
     { id: "m1", href: homeHref, label: "Home", ariaLabel: "Ir a Home", icon: Home, section: "cuenta" },
     { id: "vault", href: "/rewards", label: "Rewards", ariaLabel: "Ir a Rewards", icon: TrendingUp, section: "wallet" },
-    { id: "bridge", href: "/bridge", label: "Mover entre redes", ariaLabel: "Ir a Mover entre redes", icon: ArrowLeftRight, section: "wallet" },
-    { id: "m1", href: "/activity", label: "Actividad", ariaLabel: "Ir a Actividad", icon: ListOrdered, section: "wallet" },
   ]
     .filter((tab) => !HIDDEN_SECTIONS.includes(tab.id))
     // Sin sesión solo Home queda navegable; el resto se muestra deshabilitado.
@@ -28,8 +24,6 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
 
   const isActive = (href: string) =>
     href === homeHref ? pathname === "/home" || pathname === "/account" : pathname === href;
-
-  const crumb = pathname.replace(/^\//, "").replace(/\//g, " / ") || "home";
 
   return (
     <div className="flex min-h-full flex-1 flex-col lg:flex-row">
@@ -72,26 +66,11 @@ export default function TabsLayout({ children }: { children: React.ReactNode }) 
           </ul>
         </nav>
         <div className="border-t border-border p-4">
-          <ModeToggle />
-          <p className="pt-3 text-center font-mono text-[11px] text-muted-foreground">v1.0</p>
+          <p className="text-center font-mono text-[11px] text-muted-foreground">v1.0</p>
         </div>
       </aside>
 
       <div className="flex min-h-full flex-1 flex-col lg:pl-[230px]">
-        {/* Header mobile (ModeToggle) / topbar desktop (breadcrumb) */}
-        <div className="border-b border-border bg-card p-4 lg:hidden">
-          <ModeToggle />
-        </div>
-        <div className="hidden items-center justify-between border-b border-border bg-card px-6 py-3 lg:flex">
-          <p className="font-mono text-xs text-muted-foreground">
-            {PRODUCT_NAME.toLowerCase()} <span className="text-gold">/</span> {crumb}
-          </p>
-          <span className="inline-flex items-center gap-2 rounded-[3px] border border-border px-2 py-1 font-mono text-[11px] text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-green" />
-            Arbitrum · Base · Polygon
-          </span>
-        </div>
-
         <main className="flex-1 pb-16 lg:pb-0">{children}</main>
 
         {/* Tab bar mobile */}

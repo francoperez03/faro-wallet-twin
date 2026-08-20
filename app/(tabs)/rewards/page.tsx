@@ -49,7 +49,7 @@ const ARGT_ARBITRUM = TOKENS.ARGt.addresses.arbitrum;
 const ERROR_COPY =
   "No pudimos completar la operación. Revisá tu conexión o el saldo disponible y volvé a intentar.";
 
-export default function RendimientoPage() {
+export default function RewardsPage() {
   const { address } = useAccount();
   const config = useConfig();
   const { writeContractAsync } = useWriteContract();
@@ -165,10 +165,7 @@ export default function RendimientoPage() {
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
       <div className="flex flex-col gap-6">
         <div>
-          <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-            // FARO / RENDIMIENTO
-          </p>
-          <h1 className="font-serif text-3xl text-foreground">Rendimiento</h1>
+          <h1 className="font-serif text-3xl text-foreground">Rewards</h1>
         </div>
 
         <VaultCard />

@@ -33,7 +33,14 @@ const LZ_EIDS: Record<ChainKey, number> = {
   arbitrum: 30110,
   base: 30184,
   polygon: 30109,
+  ethereum: 30101,
 };
+
+function adapterOf(chain: ChainKey): `0x${string}` {
+  const adapter = BRIDGE_ADAPTERS[chain];
+  if (!adapter) throw new Error(`Sin adapter de bridge en ${chain}`);
+  return adapter;
+}
 
 const POLL_INTERVAL_MS = 10_000;
 const POLL_TIMEOUT_MS = 5 * 60 * 1000;
@@ -72,6 +79,7 @@ export function useBridge() {
     arbitrum: usePublicClient({ chainId: CHAIN_IDS.arbitrum }),
     base: usePublicClient({ chainId: CHAIN_IDS.base }),
     polygon: usePublicClient({ chainId: CHAIN_IDS.polygon }),
+    ethereum: usePublicClient({ chainId: CHAIN_IDS.ethereum }),
   };
 
   const [status, setStatus] = useState<BridgeStatus>("idle");
@@ -90,7 +98,7 @@ export function useBridge() {
     if (!client) throw new Error("No se pudo conectar a la red de origen");
     const sendParam = buildSendParam(toChain, address, amount);
     const fee = await client.readContract({
-      address: BRIDGE_ADAPTERS[fromChain],
+      address: adapterOf(fromChain),
       abi: bridgeAdapterAbi,
       functionName: "quoteSend",
       args: [sendParam, false],
@@ -151,7 +159,7 @@ export function useBridge() {
         address: TOKENS.ARGt.addresses[fromChain],
         abi: ERC20_ABI,
         functionName: "approve",
-        args: [BRIDGE_ADAPTERS[fromChain], amount],
+        args: [adapterOf(fromChain), amount],
         chainId: CHAIN_IDS[fromChain],
       });
 
@@ -166,7 +174,7 @@ export function useBridge() {
         : BigInt(0);
 
       await writeContractAsync({
-        address: BRIDGE_ADAPTERS[fromChain],
+        address: adapterOf(fromChain),
         abi: bridgeAdapterAbi,
         functionName: "send",
         args: [sendParam, fee, address],

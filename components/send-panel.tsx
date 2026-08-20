@@ -6,7 +6,7 @@ import { formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { TxButton, type TxButtonStage } from "@/components/tx-button";
-import { CHAINS, CHAIN_IDS, CHAIN_LABELS, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import { CHAINS, CHAIN_IDS, CHAIN_LABELS, TOKENS, type ChainKey, type TokenKey } from "@/lib/config/tokens";
 import { cn } from "@/lib/utils";
 
 const ERC20_TRANSFER_ABI = [
@@ -32,12 +32,14 @@ function isValidAddress(value: string): value is `0x${string}` {
 
 export function SendPanel({
   walletAddress,
+  token = "ARGt",
   perChain,
   refetch,
   initialChain,
   onDone,
 }: {
   walletAddress: `0x${string}` | undefined;
+  token?: TokenKey;
   perChain: Record<ChainKey, bigint>;
   refetch: () => void | Promise<unknown>;
   initialChain?: ChainKey;
@@ -80,7 +82,7 @@ export function SendPanel({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hash, receipt.isSuccess, receipt.isError, receipt.isLoading]);
 
-  const decimals = TOKENS.ARGt.decimals;
+  const decimals = TOKENS[token].decimals;
   const balanceOnChain = perChain[chain] ?? BigInt(0);
 
   const addressError = to.length > 0 && !isValidAddress(to) ? ADDRESS_ERROR : undefined;
@@ -118,7 +120,7 @@ export function SendPanel({
         await switchChainAsync({ chainId: CHAIN_IDS[chain] });
       }
       const txHash = await writeContractAsync({
-        address: TOKENS.ARGt.addresses[chain],
+        address: TOKENS[token].addresses[chain],
         abi: ERC20_TRANSFER_ABI,
         functionName: "transfer",
         args: [to, parseUnits(amount, decimals)],
@@ -156,7 +158,7 @@ export function SendPanel({
         </div>
         <p className="text-sm text-muted-foreground">
           Disponible: <span className="tabular-nums">{formatUnits(balanceOnChain, decimals)}</span>{" "}
-          {TOKENS.ARGt.symbol}
+          {TOKENS[token].symbol}
         </p>
       </div>
 
@@ -185,7 +187,7 @@ export function SendPanel({
       </div>
 
       <TxButton
-        label="Enviar ARGt"
+        label={`Enviar ${TOKENS[token].symbol}`}
         stage={stage}
         disabled={!canSubmit}
         onClick={onSubmit}

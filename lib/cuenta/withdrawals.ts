@@ -1,6 +1,6 @@
 import { createPublicClient, createWalletClient, http, erc20Abi } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
-import { arbitrum, base, polygon } from "viem/chains";
+import { arbitrum, base, mainnet, polygon } from "viem/chains";
 import { withTx, sql } from "@/lib/db/client";
 import { RPC_URLS, TOKENS, type ChainKey } from "@/lib/config/tokens";
 import { OMNIBUS_VAULT_ADDRESS, DAILY_WITHDRAW_LIMIT_BASE_UNITS } from "@/lib/config/cuenta";
@@ -10,7 +10,7 @@ export type WithdrawResult =
   | { status: "sent"; txHash: `0x${string}` }
   | { status: "failed"; reason: string };
 
-const VIEM_CHAINS = { arbitrum, base, polygon } as const;
+const VIEM_CHAINS = { arbitrum, base, polygon, ethereum: mainnet } as const;
 
 function getVaultPrivateKey(): `0x${string}` {
   const key = process.env.VAULT_PRIVATE_KEY;

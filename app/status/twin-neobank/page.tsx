@@ -81,7 +81,6 @@ export default function StatusPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-3xl lg:p-8">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">// FARO / STATUS</p>
         <h1 className="font-serif text-3xl text-foreground">Solvencia de Faro</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Verificable por cualquiera, sin login, directo desde el SobrecitoRegistry on-chain.

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useReadContracts } from "wagmi";
-import { CHAINS, CHAIN_IDS, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import { CHAINS, CHAIN_IDS, TOKENS, type ChainKey, type TokenKey } from "@/lib/config/tokens";
 
 const ERC20_BALANCE_OF_ABI = [
   {
@@ -15,13 +15,13 @@ const ERC20_BALANCE_OF_ABI = [
 ] as const;
 
 /**
- * Balance de ARGt por chain (Arbitrum, Base, Polygon) vía multicall, más el total.
+ * Balance del token por chain vía multicall, más el total.
  * Si una chain falla, su entry queda en `errors` y las demás siguen mostrando su balance.
  */
-export function useTokenBalances(address: `0x${string}` | undefined) {
+export function useTokenBalances(address: `0x${string}` | undefined, token: TokenKey = "ARGt") {
   const { data, isLoading, refetch } = useReadContracts({
     contracts: CHAINS.map((chain) => ({
-      address: TOKENS.ARGt.addresses[chain],
+      address: TOKENS[token].addresses[chain],
       abi: ERC20_BALANCE_OF_ABI,
       functionName: "balanceOf",
       args: address ? [address] : undefined,

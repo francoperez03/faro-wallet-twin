@@ -77,7 +77,7 @@ export default function PasarACuentaPage() {
     for (let attempt = 0; attempt < POLL_MAX_ATTEMPTS; attempt++) {
       await new Promise((resolve) => setTimeout(resolve, POLL_INTERVAL_MS));
       try {
-        const res = await fetch("/api/cuenta/sync-deposits", {
+        const res = await fetch("/api/account/sync-deposits", {
           method: "POST",
           headers: { Authorization: `Bearer ${token}` },
         });
@@ -124,9 +124,6 @@ export default function PasarACuentaPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / PASAR A CUENTA
-        </p>
         <h1 className="font-serif text-3xl text-foreground">Pasar a Cuenta</h1>
       </div>
 

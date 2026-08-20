@@ -6,7 +6,7 @@ import { runCorteMini } from "@/lib/sobrecito-mini/prove";
 export const maxDuration = 300;
 
 /**
- * Protegido por CRON_SECRET, mismo patrón que app/api/cuenta/interest/route.ts (T-04-07):
+ * Protegido por CRON_SECRET, mismo patrón que app/api/account/interest/route.ts (T-04-07):
  * Vercel Cron dispara GET con `Authorization: Bearer $CRON_SECRET`; el header
  * `x-cron-secret` es el path manual (POST, "correr corte ahora" en la demo en vivo).
  */

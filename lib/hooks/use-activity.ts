@@ -3,7 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { usePublicClient } from "wagmi";
 import { parseAbiItem } from "viem";
-import { CHAIN_IDS, TOKENS, type ChainKey } from "@/lib/config/tokens";
+import { CHAIN_IDS, TOKENS, type ChainKey, type TokenKey } from "@/lib/config/tokens";
 
 const TRANSFER_EVENT = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)"
@@ -22,15 +22,15 @@ export type ActivityEntry = {
 };
 
 /** Logs `Transfer` de ARGt (enviados o recibidos) del usuario en la chain activa. */
-export function useActivity(address: `0x${string}` | undefined, chain: ChainKey) {
+export function useActivity(address: `0x${string}` | undefined, chain: ChainKey, token: TokenKey = "ARGt") {
   const client = usePublicClient({ chainId: CHAIN_IDS[chain] });
 
   return useQuery({
-    queryKey: ["activity", chain, address],
+    queryKey: ["activity", token, chain, address],
     enabled: Boolean(address && client),
     queryFn: async (): Promise<ActivityEntry[]> => {
       if (!address || !client) return [];
-      const tokenAddress = TOKENS.ARGt.addresses[chain];
+      const tokenAddress = TOKENS[token].addresses[chain];
       const latest = await client.getBlockNumber();
       const fromBlock = latest > BLOCK_RANGE ? latest - BLOCK_RANGE : BigInt(0);
 

@@ -24,13 +24,13 @@ export default function CuentaPage() {
     // ponytail: D-08(a) gap del verifier de fase 3 — dispara el sweep de depósitos al
     // entrar a Home por si el usuario cerró /cuenta/pasar antes de que termine su polling.
     // Best-effort, no bloquea el render de la cuenta.
-    fetch("/api/cuenta/sync-deposits", {
+    fetch("/api/account/sync-deposits", {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
     }).catch(() => {});
     const [accountRes, rateRes] = await Promise.all([
-      fetch("/api/cuenta/account", { headers: { Authorization: `Bearer ${token}` } }),
-      fetch("/api/cuenta/rate"),
+      fetch("/api/account/account", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("/api/account/rate"),
     ]);
     if (accountRes.ok) {
       const data = await accountRes.json();
@@ -64,9 +64,6 @@ export default function CuentaPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-5xl lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-8 lg:p-8">
       <div className="flex flex-col gap-6">
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / CUENTA
-        </p>
 
         <div>
           <p className="text-sm text-muted-foreground">Saldo en tu Cuenta</p>
@@ -101,10 +98,10 @@ export default function CuentaPage() {
 
       <div className="flex gap-3 lg:flex-col">
         <Button asChild className="flex-1">
-          <Link href="/cuenta/pasar">Pasar a Cuenta</Link>
+          <Link href="/account/deposit">Pasar a Cuenta</Link>
         </Button>
         <Button asChild variant="outline" className="flex-1">
-          <Link href="/cuenta/retirar">Retirar</Link>
+          <Link href="/account/withdraw">Retirar</Link>
         </Button>
       </div>
     </div>

@@ -36,7 +36,7 @@ export default function VerificarPage() {
     setStatus("loading");
     try {
       const token = await getAccessToken();
-      const res = await fetch("/api/cuenta/opening", { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch("/api/account/opening", { headers: { Authorization: `Bearer ${token}` } });
       if (!res.ok) {
         setStatus("error");
         return;
@@ -87,9 +87,6 @@ export default function VerificarPage() {
   return (
     <div className="mx-auto flex w-full max-w-lg flex-col gap-6 p-6 lg:max-w-xl lg:p-8">
       <div>
-        <p className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-          // FARO / VERIFICAR
-        </p>
         <h1 className="font-serif text-3xl text-foreground">Verificá tu inclusión</h1>
       </div>
 
