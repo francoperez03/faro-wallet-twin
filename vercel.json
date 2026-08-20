@@ -3,6 +3,10 @@
     {
       "path": "/api/cuenta/interest",
       "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cuenta/corte-mini",
+      "schedule": "0 7 * * *"
     }
   ]
 }
