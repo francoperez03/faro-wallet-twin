@@ -8,8 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { recomputeCommitment } from "@/lib/poseidon2/commit";
 import { formatUnits } from "viem";
 
-// ponytail: verde/rojo no están en 01-UI-SPEC.md; misma extensión mínima que
-// components/cuenta/solvency-badge.tsx (SOL-03), ahora sobre los tokens gold/green.
+// ponytail: verde/rojo no están en 01-UI-SPEC.md; extensión mínima sobre los tokens gold/green.
 const STATUS_STYLES = {
   verde: "border-transparent bg-green-dim text-green",
   rojo: "border-transparent bg-destructive/10 text-destructive",
@@ -20,10 +19,9 @@ type Opening = {
   salt: string;
   corteId: string;
   commitment: string;
-  synthetic: boolean;
 };
 
-type Status = "loading" | "match" | "mismatch" | "error";
+type Status = "loading" | "match" | "mismatch" | "error" | "noCut";
 
 const REPORT_EMAIL = "soporte@twin-neobank.example";
 
@@ -44,7 +42,11 @@ export function VerifyRewards() {
         setStatus("error");
         return;
       }
-      const data: Opening = await res.json();
+      const data: Opening | { noCut: true } = await res.json();
+      if ("noCut" in data) {
+        setStatus("noCut");
+        return;
+      }
       setOpening(data);
 
       const balances = data.balances.map((b) => BigInt(b));
@@ -102,6 +104,12 @@ export function VerifyRewards() {
         </p>
       )}
 
+      {status === "noCut" && (
+        <Badge className="border-transparent bg-muted text-muted-foreground">
+          Todavía no hay un corte de rewards publicado
+        </Badge>
+      )}
+
       {(status === "match" || status === "mismatch") && (
         <Badge className={STATUS_STYLES[status === "match" ? "verde" : "rojo"]}>
           {status === "match"
@@ -137,12 +145,6 @@ export function VerifyRewards() {
         >
           <a href={mailto}>Reportar discrepancia</a>
         </Button>
-      )}
-
-      {opening?.synthetic && (
-        <p className="text-sm text-muted-foreground">
-          Corte sintético (era fixture, sin corte real todavía).
-        </p>
       )}
 
       <div className="rounded-lg border border-border bg-card p-4 text-sm text-foreground/80">

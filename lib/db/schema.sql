@@ -39,15 +39,11 @@ create table if not exists sync_state (
   value text
 );
 
--- Corte mini (04-CONTEXT.md D-09): una fila por usuario incluido en cada corrida real
--- del pipeline de circuits-mini/liabilities_batch_mini. balances = [argt_balance,
--- bolt_balance] (mismo orden que el circuito), commitment = commit(balances, salt)
--- calculado con el mismo Poseidon2 que el circuito (lib/poseidon2/commit.ts). Idempotente:
--- correr el corte dos veces con el mismo corte_id no rompe (unique en la PK compuesta).
--- Reusada por el pivote de yield (circuits-mini/yield_cut, lib/sobrecito-mini/prove-yield.ts):
--- ahi balances = [balance, reward] (mismo orden que ese circuito), mismo corte_id compartido
--- namespace (los corte_id de yield y de liabilities_batch_mini nunca colisionan, cada
--- pipeline arma el suyo con un prefijo distinto).
+-- Corte de yield (circuits-mini/yield_cut, lib/sobrecito-mini/prove-yield.ts): una fila por
+-- usuario incluido en cada corrida real del pipeline. balances = [balance, reward] (mismo
+-- orden que el circuito), commitment = commit(balances, salt) calculado con el mismo
+-- Poseidon2 que el circuito (lib/poseidon2/commit.ts). Idempotente: correr el corte dos veces
+-- con el mismo corte_id no rompe (unique en la PK compuesta).
 create table if not exists openings (
   corte_id text not null,
   user_id text not null references accounts (user_id),

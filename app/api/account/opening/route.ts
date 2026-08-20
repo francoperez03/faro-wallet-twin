@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyPrivyToken } from "@/lib/privy-server";
 import { sql } from "@/lib/db/client";
-import { recomputeCommitment } from "@/lib/poseidon2/commit";
 import { deriveSalt } from "@/lib/poseidon2/salt";
-
-// D-09: no hay corte real en la era fixture, la API sirve un opening on-the-fly con un
-// corte_id sintético fijo. Cuando exista el corte mini, esto pasa a leer una fila real
-// de `openings(corte_id, ...)` (el salt se sigue derivando on-the-fly, es determinístico).
-const SYNTHETIC_CORTE_ID = "fixture-sintetico";
 
 export async function GET(req: NextRequest) {
   let identity;
@@ -46,24 +40,10 @@ export async function GET(req: NextRequest) {
       salt: salt.toString(),
       corteId: row.corte_id,
       commitment: row.commitment,
-      synthetic: false,
     });
   }
 
-  const rows = await sql`select argt_balance from accounts where user_id = ${userId}`;
-  // Misma escala que los cortes reales (BAL_SCALE 1e10 -> unidades de 8 decimales),
-  // así ambas ramas comparten arity y unidad y la UI formatea siempre igual.
-  const BAL_SCALE = BigInt(10) ** BigInt(10);
-  const balance = (rows[0] ? BigInt(rows[0].argt_balance) : BigInt(0)) / BAL_SCALE;
-  const reward = BigInt(0);
-
-  const commitment = recomputeCommitment([balance, reward], salt);
-
-  return NextResponse.json({
-    balances: [balance.toString(), reward.toString()],
-    salt: salt.toString(),
-    corteId: SYNTHETIC_CORTE_ID,
-    commitment: commitment.toString(),
-    synthetic: true,
-  });
+  // Sin fila de openings todavía no hay corte de yield publicado que incluya a este
+  // usuario: no hay nada que recomputar, la UI muestra el estado "sin corte".
+  return NextResponse.json({ noCut: true });
 }

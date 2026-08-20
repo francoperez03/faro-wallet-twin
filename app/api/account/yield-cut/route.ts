@@ -6,11 +6,10 @@ import { runInterestAndYieldCut } from "@/lib/sobrecito-mini/prove-yield";
 export const maxDuration = 300;
 
 /**
- * Boton manual "correr corte ahora" del demo en vivo (mismo patron que app/api/account/cut-mini
- * antes de este pivote): protegido por CRON_SECRET, misma logica que el cron de
- * app/api/account/interest (runInterestAndYieldCut encadena accrueInterest() + el corte de
- * yield), expuesto en su propia ruta para poder disparar la corrida completa on-demand sin
- * esperar al cron de las 06:00.
+ * Boton manual "correr corte ahora" del demo en vivo: protegido por CRON_SECRET, misma logica
+ * que el cron de app/api/account/interest (runInterestAndYieldCut encadena accrueInterest() +
+ * el corte de yield), expuesto en su propia ruta para poder disparar la corrida completa
+ * on-demand sin esperar al cron de las 06:00.
  */
 async function handle(req: NextRequest) {
   const secret = process.env.CRON_SECRET;
