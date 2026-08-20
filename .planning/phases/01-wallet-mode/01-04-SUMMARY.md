@@ -60,6 +60,7 @@ completed: 2026-08-20
 
 1. **Task 1: ABI del bridge adapter (verificación empírica, no fallback genérico)** - `4497753` (feat)
 2. **Task 2: Flujo de bridge (M3-01, M3-02)** - `1a7e42d` (feat)
+3. **Fix: Toaster duplicado (post-Task 2)** - `ca223ea` (fix)
 
 ## Verificación empírica del ABI (evidencia completa)
 
@@ -104,9 +105,17 @@ Esta combinación (13/13 selectores de la interfaz completa + 4 lecturas de esta
 - **Verification:** Ver sección "Verificación empírica del ABI" arriba; evidencia completa también documentada como comentario en el archivo.
 - **Committed in:** `4497753` (Task 1 commit)
 
+**3. [Rule 1 - Bug] `Toaster` duplicado en la página de bridge**
+- **Found during:** Post-Task 2, revisión de git log antes de cerrar el plan
+- **Issue:** Un executor concurrente (01-02 o 01-03) montó `Toaster` global en `app/layout.tsx` (commit `5ff92e2`) y lo sacó de `app/(tabs)/enviar/page.tsx`. La página de bridge, escrita antes de ver ese commit, todavía montaba su propio `<Toaster />`, duplicando las notificaciones toast.
+- **Fix:** Se quitó el import y el `<Toaster />` de `app/(tabs)/bridge/page.tsx`.
+- **Files modified:** `app/(tabs)/bridge/page.tsx`
+- **Verification:** `npm run build` sigue verde.
+- **Committed in:** `ca223ea`
+
 ---
 
-**Total deviations:** 2 auto-fixed (1 Rule 3 blocking, 1 Rule 1 mejora sobre el fallback previsto). Ninguna cambia el alcance del plan; la segunda mejora la calidad del resultado (fee real cotizado on-chain en vez de confirmación manual).
+**Total deviations:** 3 auto-fixed (1 Rule 3 blocking, 1 Rule 1 mejora sobre el fallback previsto, 1 Rule 1 bug de duplicación por trabajo concurrente). Ninguna cambia el alcance del plan.
 
 ## Issues Encountered
 None — la verificación empírica del ABI resolvió el bloqueo sin necesidad de preguntar en Discord (SPEC §8 preveía esa opción si no había `quote`; no hizo falta).
