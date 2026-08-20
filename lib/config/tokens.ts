@@ -13,6 +13,18 @@ export const RPC_URLS: Record<ChainKey, string> = {
   polygon: process.env.NEXT_PUBLIC_RPC_POLYGON ?? "https://polygon-bor-rpc.publicnode.com",
 };
 
+export const CHAIN_LABELS: Record<ChainKey, string> = {
+  arbitrum: "Arbitrum",
+  base: "Base",
+  polygon: "Polygon",
+};
+
+export const EXPLORER_TX_URL: Record<ChainKey, string> = {
+  arbitrum: "https://arbiscan.io/tx/",
+  base: "https://basescan.org/tx/",
+  polygon: "https://polygonscan.com/tx/",
+};
+
 export const TOKENS = {
   ARGt: {
     symbol: "ARGt",
