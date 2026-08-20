@@ -110,3 +110,33 @@
     @apply bg-background text-foreground;
   }
 }
+/* Sliders del rebalanceo: track fino con fill hasta --slider-pct, thumb chico. */
+.rebalance-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--slider-color) var(--slider-pct), var(--secondary) var(--slider-pct));
+}
+.rebalance-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, var(--slider-color) var(--slider-pct), var(--secondary) var(--slider-pct));
+}
+.rebalance-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -4px;
+  height: 12px;
+  width: 12px;
+  border-radius: 9999px;
+  background: var(--slider-color);
+  border: 2px solid var(--background);
+}
+.rebalance-slider::-moz-range-thumb {
+  height: 12px;
+  width: 12px;
+  border-radius: 9999px;
+  background: var(--slider-color);
+  border: 2px solid var(--background);
+}
+.slider-gold { --slider-color: var(--gold); }
+.slider-green { --slider-color: var(--green); }

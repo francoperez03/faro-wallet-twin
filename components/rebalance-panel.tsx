@@ -294,15 +294,29 @@ export function RebalancePanel({
                   />
                 </span>
               </div>
-              <div className="mb-1 h-1 overflow-hidden rounded-full bg-secondary" aria-hidden="true">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-[width] duration-300 motion-reduce:transition-none",
-                    isEdited ? "bg-green" : "bg-gold"
-                  )}
-                  style={{ width: `${targetPct}%` }}
-                />
-              </div>
+              {/* Slider nativo: arrastrar la barra fija el objetivo de la red (bps de precisión). */}
+              <input
+                type="range"
+                min={0}
+                max={10000}
+                step={1}
+                value={Math.round(targetPct * 100)}
+                disabled={executing || total === zero}
+                aria-label={`Objetivo en ${CHAIN_LABELS[chain]} (arrastrar)`}
+                onChange={(e) => {
+                  const bps = BigInt(e.target.value);
+                  const centUnit = BigInt(10) ** BigInt(decimals - 2);
+                  const amount = (((total * bps) / BigInt(10000)) / centUnit) * centUnit;
+                  setChainText(chain, formatUnits(amount, decimals));
+                }}
+                className={cn(
+                  "rebalance-slider mb-1 block h-4 w-full cursor-pointer appearance-none bg-transparent disabled:cursor-default disabled:opacity-50",
+                  isEdited ? "slider-green" : "slider-gold"
+                )}
+                style={{
+                  ["--slider-pct" as string]: `${targetPct}%`,
+                }}
+              />
             </div>
           );
         })}
@@ -372,31 +386,65 @@ export function RebalancePanel({
                 gas?.data && gas.data.value < fee
                   ? `Gas insuficiente en ${CHAIN_LABELS[leg.from]}: necesitás ~${formatEther(fee)} ${NATIVE_SYMBOL[leg.from]}, tenés ${formatEther(gas.data.value)}.`
                   : null;
+              const state = legStates[i];
               return (
                 <li key={i} className="flex flex-col gap-1">
-                  <div className="flex items-center justify-between">
-                    <span>
-                      {i + 1}. {CHAIN_LABELS[leg.from]} → {CHAIN_LABELS[leg.to]}:{" "}
-                      <span className="tabular-nums">{formatUnits(leg.amount, decimals)}</span>{" "}
-                      {TOKENS.ARGt.symbol} · fee ~
-                      <span className="tabular-nums">{formatEther(fee)}</span>{" "}
-                      {NATIVE_SYMBOL[leg.from]}
+                  <div
+                    className={cn(
+                      "flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors",
+                      state === "completada" && "border-green/40 bg-green-dim",
+                      state === "error" && "border-destructive/40 bg-destructive/10",
+                      state === "en_curso" && "border-gold/40 bg-gold-dim",
+                      (!state || state === "pendiente") && "border-border bg-background"
+                    )}
+                  >
+                    {/* Número de paso: círculo con el color del estado. */}
+                    <span
+                      className={cn(
+                        "flex size-7 shrink-0 items-center justify-center rounded-full font-mono text-xs font-semibold",
+                        state === "completada" && "bg-green text-background",
+                        state === "error" && "bg-destructive text-background",
+                        state === "en_curso" && "bg-gold text-background",
+                        (!state || state === "pendiente") && "bg-secondary text-muted-foreground"
+                      )}
+                      aria-hidden="true"
+                    >
+                      {state === "completada" ? "✓" : i + 1}
                     </span>
-                    {legStates[i] && (
+                    <span className="flex min-w-0 flex-1 flex-col">
+                      <span className="flex items-center gap-1.5 text-sm text-foreground">
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                          {CHAIN_LABELS[leg.from]}
+                        </span>
+                        <span className="text-gold" aria-hidden="true">&rarr;</span>
+                        <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
+                          {CHAIN_LABELS[leg.to]}
+                        </span>
+                      </span>
+                      <span className="text-sm">
+                        <span className="font-semibold text-gold tabular-nums">
+                          {formatUnits(leg.amount, decimals)} {TOKENS.ARGt.symbol}
+                        </span>{" "}
+                        <span className="font-mono text-[11px] text-muted-foreground tabular-nums">
+                          · fee ~{formatEther(fee)} {NATIVE_SYMBOL[leg.from]}
+                        </span>
+                      </span>
+                    </span>
+                    {state && (
                       <span
                         className={cn(
-                          "font-mono text-[11px] uppercase tracking-widest",
-                          legStates[i] === "completada" && "text-green",
-                          legStates[i] === "error" && "text-destructive",
-                          legStates[i] === "en_curso" && "text-foreground",
-                          legStates[i] === "pendiente" && "text-muted-foreground"
+                          "shrink-0 font-mono text-[11px] uppercase tracking-widest",
+                          state === "completada" && "text-green",
+                          state === "error" && "text-destructive",
+                          state === "en_curso" && "text-gold",
+                          state === "pendiente" && "text-muted-foreground"
                         )}
                       >
-                        {LEG_STATE_LABEL[legStates[i]]}
+                        {LEG_STATE_LABEL[state]}
                       </span>
                     )}
                   </div>
-                  {shortGas && <p className="text-xs text-destructive">{shortGas}</p>}
+                  {shortGas && <p className="px-3 text-xs text-destructive">{shortGas}</p>}
                 </li>
               );
             })}
