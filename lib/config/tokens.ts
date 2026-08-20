@@ -8,12 +8,27 @@ export const CHAIN_IDS: Record<ChainKey, number> = {
   ethereum: 1,
 };
 
+// Defaults: endpoints públicos que responden eth_getLogs (publicnode lo bloquea en Arbitrum,
+// Base y Ethereum). Override por env para producción.
 export const RPC_URLS: Record<ChainKey, string> = {
-  arbitrum: process.env.NEXT_PUBLIC_RPC_ARBITRUM ?? "https://arbitrum-one-rpc.publicnode.com",
-  base: process.env.NEXT_PUBLIC_RPC_BASE ?? "https://base-rpc.publicnode.com",
-  polygon: process.env.NEXT_PUBLIC_RPC_POLYGON ?? "https://polygon-bor-rpc.publicnode.com",
-  ethereum: process.env.NEXT_PUBLIC_RPC_ETHEREUM ?? "https://ethereum-rpc.publicnode.com",
+  arbitrum:
+    process.env.NEXT_PUBLIC_RPC_ARBITRUM ?? "https://arb1.arbitrum.io/rpc",
+  base: process.env.NEXT_PUBLIC_RPC_BASE ?? "https://mainnet.base.org",
+  polygon:
+    process.env.NEXT_PUBLIC_RPC_POLYGON ??
+    "https://polygon-bor-rpc.publicnode.com",
+  ethereum: process.env.NEXT_PUBLIC_RPC_ETHEREUM ?? "https://eth.drpc.org",
 };
+
+// Ventana del historial de actividad: ~48 h por red en bloques, y el span máximo que el RPC
+// acepta por llamada a eth_getLogs (10k en los públicos de Base/Polygon/Ethereum; arb1 acepta más).
+export const LOG_RANGE: Record<ChainKey, { window: bigint; maxSpan: bigint }> =
+  {
+    arbitrum: { window: BigInt(691_200), maxSpan: BigInt(691_200) }, // ~0,25 s/bloque
+    base: { window: BigInt(86_400), maxSpan: BigInt(10_000) }, // 2 s/bloque
+    polygon: { window: BigInt(86_400), maxSpan: BigInt(10_000) }, // 2 s/bloque
+    ethereum: { window: BigInt(14_400), maxSpan: BigInt(10_000) }, // 12 s/bloque
+  };
 
 export const CHAIN_LABELS: Record<ChainKey, string> = {
   arbitrum: "Arbitrum",
@@ -76,7 +91,11 @@ export const BRIDGE_CHAINS = CHAINS.filter((c) => Boolean(BRIDGE_ADAPTERS[c]));
 // SobrecitoRegistry (Phase 2 SOL-01/SOL-02). Fallback = deployments.json (raíz del repo),
 // override por env NEXT_PUBLIC_REGISTRY_1_*. Phase 4 (04-03) agrega un segundo entry, el
 // pivote de yield (contracts-yield/) agrega un tercero.
-export const REGISTRIES: { label: string; address: `0x${string}`; chainId: number }[] = [
+export const REGISTRIES: {
+  label: string;
+  address: `0x${string}`;
+  chainId: number;
+}[] = [
   {
     label: process.env.NEXT_PUBLIC_REGISTRY_1_LABEL ?? "Fixture sintética",
     address: (process.env.NEXT_PUBLIC_REGISTRY_1_ADDRESS ??

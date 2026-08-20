@@ -3,10 +3,11 @@
 import { useQuery } from "@tanstack/react-query";
 import { useConfig } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
-import { parseAbiItem } from "viem";
+import { parseAbiItem, type Log } from "viem";
 import {
   CHAINS,
   CHAIN_IDS,
+  LOG_RANGE,
   TOKENS,
   TOKEN_KEYS,
   type ChainKey,
@@ -16,15 +17,21 @@ import {
 const TRANSFER_EVENT = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",
 );
+type TransferLog = Log<bigint, number, false, typeof TRANSFER_EVENT>;
 
-// ponytail: ~24 h de historia por red (bloques/día aproximados), sin indexer. Si el RPC
-// público rechaza el rango, se reintenta con ventanas más chicas (÷4, ÷16).
-const BLOCK_RANGE: Record<ChainKey, bigint> = {
-  arbitrum: BigInt(350000),
-  base: BigInt(45000),
-  polygon: BigInt(45000),
-  ethereum: BigInt(7500),
-};
+// ponytail: ventana de ~48 h por red leída en chunks del span máximo que acepta el RPC
+// (LOG_RANGE), sin indexer. Para más historial: RPC con API key en NEXT_PUBLIC_RPC_* y
+// subir `window`.
+function chunks(latest: bigint, chain: ChainKey) {
+  const { window, maxSpan } = LOG_RANGE[chain];
+  const floor = latest > window ? latest - window : BigInt(0);
+  const out: { fromBlock: bigint; toBlock: bigint }[] = [];
+  for (let toBlock = latest; toBlock > floor; toBlock -= maxSpan) {
+    const start = toBlock - maxSpan + BigInt(1);
+    out.push({ fromBlock: start > floor ? start : floor, toBlock });
+  }
+  return out;
+}
 
 export type ActivityEntry = {
   hash: `0x${string}`;
@@ -38,9 +45,15 @@ export type ActivityEntry = {
   timestamp: number;
 };
 
+export type ActivityResult = {
+  entries: ActivityEntry[];
+  failedChains: ChainKey[];
+};
+
 /**
  * Historial único del usuario: logs `Transfer` de todos los tokens en todas las redes
- * (el par es moneda + red), ordenado por timestamp de bloque desc. Una red caída no tumba al resto.
+ * (el par es moneda + red), ordenado por timestamp de bloque desc. Una red caída no tumba
+ * al resto: queda en `failedChains` para avisarlo en la UI en vez de mostrar "sin movimientos".
  */
 export function useActivity(address: `0x${string}` | undefined) {
   const config = useConfig();
@@ -48,69 +61,61 @@ export function useActivity(address: `0x${string}` | undefined) {
   return useQuery({
     queryKey: ["activity", address],
     enabled: Boolean(address),
-    queryFn: async (): Promise<ActivityEntry[]> => {
-      if (!address) return [];
+    queryFn: async (): Promise<ActivityResult> => {
+      if (!address) return { entries: [], failedChains: [] };
 
       const perChain = await Promise.all(
-        CHAINS.map(async (chain): Promise<ActivityEntry[]> => {
+        CHAINS.map(async (chain): Promise<ActivityEntry[] | null> => {
           const client = getPublicClient(config, { chainId: CHAIN_IDS[chain] });
-          if (!client) return [];
+          if (!client) return null;
           try {
             const latest = await client.getBlockNumber();
-            const fetchRange = async (range: bigint) => {
-              const fromBlock = latest > range ? latest - range : BigInt(0);
-              return Promise.all(
-              TOKEN_KEYS.flatMap((token) => {
-                const tokenAddress = TOKENS[token].addresses[chain];
-                if (!tokenAddress) return [];
-                const common = {
-                  address: tokenAddress,
-                  event: TRANSFER_EVENT,
-                  fromBlock,
-                  toBlock: latest,
-                };
-                return [
-                  client
-                    .getLogs({ ...common, args: { from: address } })
-                    .then((logs) =>
-                      logs.map((log) => ({
-                        hash: log.transactionHash,
-                        token,
-                        chain,
-                        direction: "sent" as const,
-                        counterparty: log.args.to as `0x${string}`,
-                        amount: log.args.value as bigint,
-                        blockNumber: log.blockNumber,
-                      })),
-                    ),
-                  client
-                    .getLogs({ ...common, args: { to: address } })
-                    .then((logs) =>
-                      logs.map((log) => ({
-                        hash: log.transactionHash,
-                        token,
-                        chain,
-                        direction: "received" as const,
-                        counterparty: log.args.from as `0x${string}`,
-                        amount: log.args.value as bigint,
-                        blockNumber: log.blockNumber,
-                      })),
-                    ),
-                ];
-              }),
+            const addresses = TOKEN_KEYS.map(
+              (token) => TOKENS[token].addresses[chain],
+            );
+            const tokenByAddress = new Map(
+              TOKEN_KEYS.map((token) => [
+                TOKENS[token].addresses[chain].toLowerCase(),
+                token,
+              ]),
+            );
+            const toEntry =
+              (direction: "sent" | "received") => (log: TransferLog) => ({
+                hash: log.transactionHash,
+                token:
+                  tokenByAddress.get(log.address.toLowerCase()) ??
+                  TOKEN_KEYS[0],
+                chain,
+                direction,
+                counterparty: (direction === "sent"
+                  ? log.args.to
+                  : log.args.from) as `0x${string}`,
+                amount: log.args.value as bigint,
+                blockNumber: log.blockNumber,
+              });
+            // Chunks en secuencia (2 llamadas cada uno): los RPC públicos cortan por rate limit
+            // si se disparan todos juntos. El primer chunk usa "latest" porque el head de los
+            // nodos balanceados puede ir detrás del getBlockNumber.
+            const raw: Omit<ActivityEntry, "timestamp">[][] = [];
+            for (const [i, { fromBlock, toBlock }] of chunks(
+              latest,
+              chain,
+            ).entries()) {
+              const common = {
+                address: addresses,
+                event: TRANSFER_EVENT,
+                fromBlock,
+                ...(i === 0 ? { toBlock: "latest" as const } : { toBlock }),
+              };
+              const [sent, received] = await Promise.all([
+                client.getLogs({ ...common, args: { from: address } }),
+                client.getLogs({ ...common, args: { to: address } }),
+              ]);
+              raw.push(
+                sent.map(toEntry("sent")),
+                received.map(toEntry("received")),
               );
-            };
-            // Reintento con ventanas más chicas si el RPC rechaza el rango grande.
-            let raw: Awaited<ReturnType<typeof fetchRange>> | null = null;
-            for (const divisor of [BigInt(1), BigInt(4), BigInt(16)]) {
-              try {
-                raw = await fetchRange(BLOCK_RANGE[chain] / divisor);
-                break;
-              } catch {
-                // probar la siguiente ventana
-              }
             }
-            if (!raw) return [];
             const entries = raw.flat();
             const blocks = [...new Set(entries.map((e) => e.blockNumber))];
             const stamps = new Map(
@@ -126,12 +131,17 @@ export function useActivity(address: `0x${string}` | undefined) {
               timestamp: stamps.get(e.blockNumber) ?? 0,
             }));
           } catch {
-            return [];
+            return null;
           }
         }),
       );
 
-      return perChain.flat().sort((a, b) => b.timestamp - a.timestamp);
+      return {
+        entries: perChain
+          .flatMap((r) => r ?? [])
+          .sort((a, b) => b.timestamp - a.timestamp),
+        failedChains: CHAINS.filter((_, i) => perChain[i] === null),
+      };
     },
   });
 }

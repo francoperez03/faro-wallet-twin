@@ -50,7 +50,8 @@ export function ActivityCard({
   const filtersRef = useRevealAnimation<HTMLDivElement>(showFilters);
   const filterCount = (token === ALL ? 0 : 1) + (chain === ALL ? 0 : 1);
 
-  const entries = (data ?? []).filter(
+  const failed = data?.failedChains ?? [];
+  const entries = (data?.entries ?? []).filter(
     (e) =>
       (token === ALL || e.token === token) &&
       (chain === ALL || e.chain === chain),
@@ -72,7 +73,9 @@ export function ActivityCard({
           onClick={() => setShowFilters((v) => !v)}
           className={cn(
             "flex min-h-11 items-center gap-1.5 rounded-md px-2 text-xs font-semibold transition-colors",
-            showFilters || filterCount > 0 ? "text-gold" : "text-muted-foreground hover:text-foreground"
+            showFilters || filterCount > 0
+              ? "text-gold"
+              : "text-muted-foreground hover:text-foreground",
           )}
         >
           <SlidersHorizontal className="size-4" aria-hidden="true" />
@@ -86,55 +89,63 @@ export function ActivityCard({
       </div>
 
       {showFilters && (
-      <div ref={filtersRef} className="mt-2 flex flex-wrap gap-2">
-        <div
-          role="tablist"
-          aria-label="Moneda"
-          className="flex gap-1 rounded-lg border border-border bg-background p-1"
-        >
-          {([ALL, ...TOKEN_KEYS] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={token === key}
-              aria-label={key === ALL ? "Todas las monedas" : TOKENS[key].name}
-              onClick={() => setToken(key)}
-              className={cn(CHIP, token === key ? CHIP_ON : CHIP_OFF)}
-            >
-              {key === ALL ? (
-                "Todo"
-              ) : (
-                <>
-                  <span aria-hidden="true">{TOKENS[key].flag}</span>{" "}
-                  {TOKENS[key].symbol}
-                </>
-              )}
-            </button>
-          ))}
+        <div ref={filtersRef} className="mt-2 flex flex-wrap gap-2">
+          <div
+            role="tablist"
+            aria-label="Moneda"
+            className="flex gap-1 rounded-lg border border-border bg-background p-1"
+          >
+            {([ALL, ...TOKEN_KEYS] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={token === key}
+                aria-label={
+                  key === ALL ? "Todas las monedas" : TOKENS[key].name
+                }
+                onClick={() => setToken(key)}
+                className={cn(CHIP, token === key ? CHIP_ON : CHIP_OFF)}
+              >
+                {key === ALL ? (
+                  "Todo"
+                ) : (
+                  <>
+                    <span aria-hidden="true">{TOKENS[key].flag}</span>{" "}
+                    {TOKENS[key].symbol}
+                  </>
+                )}
+              </button>
+            ))}
+          </div>
+          <div
+            role="tablist"
+            aria-label="Red"
+            className="flex gap-1 rounded-lg border border-border bg-background p-1"
+          >
+            {([ALL, ...CHAINS] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                role="tab"
+                aria-selected={chain === key}
+                onClick={() => setChain(key)}
+                className={cn(CHIP, chain === key ? CHIP_ON : CHIP_OFF)}
+              >
+                {key === ALL ? "Todas" : CHAIN_LABELS[key]}
+              </button>
+            ))}
+          </div>
         </div>
-        <div
-          role="tablist"
-          aria-label="Red"
-          className="flex gap-1 rounded-lg border border-border bg-background p-1"
-        >
-          {([ALL, ...CHAINS] as const).map((key) => (
-            <button
-              key={key}
-              type="button"
-              role="tab"
-              aria-selected={chain === key}
-              onClick={() => setChain(key)}
-              className={cn(CHIP, chain === key ? CHIP_ON : CHIP_OFF)}
-            >
-              {key === ALL ? "Todas" : CHAIN_LABELS[key]}
-            </button>
-          ))}
-        </div>
-      </div>
       )}
 
       <div className="mt-4 border-t border-border">
+        {failed.length > 0 && (
+          <p className="pt-3 text-xs text-amber">
+            Sin datos de {failed.map((c) => CHAIN_LABELS[c]).join(", ")} por
+            ahora. Reintentá en un rato.
+          </p>
+        )}
         {isLoading && (
           <div className="flex flex-col gap-3 pt-4">
             <Skeleton className="h-11 w-full" />
