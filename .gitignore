@@ -44,3 +44,6 @@ next-env.d.ts
 # circuits-mini: build artifacts de nargo/bb, no se commitean (D-02 solo commitea
 # circuits-mini/*.json, el artifact ACIR compilado una vez)
 circuits-mini/**/target/
+
+# logs de playwright-mcp
+.playwright-mcp/
