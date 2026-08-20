@@ -228,7 +228,12 @@ export function RewardsPanel() {
 
   const isDepositing =
     depositStatus === "sending" || depositStatus === "confirming";
-  // Decimales completos con piso de 8: el yield diario es chico y el usuario quiere verlo.
+  // Saldo con 2 decimales; los rewards acumulados con 8, el yield diario es chico y se quiere ver.
+  const fmt2 = (v: bigint) =>
+    Number(formatUnits(v, decimals)).toLocaleString("es-AR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
   const fmtFull = (v: bigint) => {
     const [int, frac = ""] = formatUnits(v, decimals).split(".");
     return `${int}.${frac.padEnd(8, "0")}`;
@@ -261,7 +266,7 @@ export function RewardsPanel() {
           className="mt-1 text-[28px] font-serif leading-tight tracking-tight text-gold tabular-nums"
           style={{ minWidth: "8ch" }}
         >
-          {fmtFull(saldo)} {TOKENS.ARGt.symbol}
+          {fmt2(saldo)} {TOKENS.ARGt.symbol}
         </p>
         <p className="mt-1 text-sm text-muted-foreground">
           Rewards acumulados{" "}
