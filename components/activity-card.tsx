@@ -15,10 +15,18 @@ import {
 import { SlidersHorizontal } from "lucide-react";
 import { useActivity } from "@/lib/hooks/use-activity";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import { Skeleton } from "@/components/ui/skeleton";
+import { LoadingPhrases } from "@/components/loading-phrases";
 import { cn, truncateAddress } from "@/lib/utils";
 
 const ALL = "all";
+const LOADING_PHRASES = [
+  "Leyendo Arbitrum…",
+  "Leyendo Base…",
+  "Leyendo Polygon…",
+  "Leyendo Ethereum…",
+  "Cruzando monedas y redes…",
+  "Ordenando por fecha…",
+] as const;
 const CHIP =
   "min-h-8 rounded-md px-2 text-[11px] font-semibold transition-colors";
 const CHIP_ON = "bg-gold-dim text-gold";
@@ -142,9 +150,8 @@ export function ActivityCard({
           </p>
         )}
         {isLoading && (
-          <div className="flex flex-col gap-3 pt-4">
-            <Skeleton className="h-11 w-full" />
-            <Skeleton className="h-11 w-full" />
+          <div className="flex min-h-24 items-center justify-center py-8">
+            <LoadingPhrases phrases={LOADING_PHRASES} />
           </div>
         )}
 
