@@ -21,14 +21,27 @@ import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
 import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
+import { useVaultPosition } from "@/lib/hooks/use-vault-position";
 import { useRevealAnimation } from "@/lib/hooks/use-reveal-animation";
-import { TOKENS, TOKEN_KEYS, type TokenKey } from "@/lib/config/tokens";
+import {
+  TOKENS,
+  TOKEN_KEYS,
+  VAULT_ARGT_PRIME,
+  type TokenKey,
+} from "@/lib/config/tokens";
 import { cn } from "@/lib/utils";
 import { PAGE_WIDTH } from "@/lib/config/app";
 
 /** Radix Tabs necesita un value; este no matchea ningún trigger, así el panel arranca colapsado
  * (patrón vault-aggregator/lemon-account-card.tsx). */
 const NONE = "none";
+
+function fmt(value: bigint, decimals: number) {
+  return Number(formatUnits(value, decimals)).toLocaleString("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 type PanelKey = "enviar" | "recibir";
 
 type Step = "home" | "rewards";
@@ -43,10 +56,20 @@ export default function HomePage() {
   const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
   const [token, setToken] = useState<TokenKey>("ARGt");
   const { symbol, decimals } = TOKENS[token];
-  const { perChain, total, errors, isLoading, refetch } = useTokenBalances(
-    walletAddress,
-    token,
-  );
+  const {
+    perChain,
+    total: walletTotal,
+    errors,
+    isLoading: isLoadingWallet,
+    refetch,
+  } = useTokenBalances(walletAddress, token);
+  // Saldo total = wallet en todas las redes + lo invertido en Rewards (vault ARGt Prime, solo ARGt).
+  const vault = useVaultPosition();
+  const invested =
+    token === VAULT_ARGT_PRIME.asset ? vault.valueInArgt : BigInt(0);
+  const total = walletTotal + invested;
+  const isLoading =
+    isLoadingWallet || (token === VAULT_ARGT_PRIME.asset && vault.isLoading);
 
   const [panel, setPanel] = useState<PanelKey | null>(null);
   const [showBreakdown, setShowBreakdown] = useState(false);
@@ -301,6 +324,17 @@ export default function HomePage() {
                       className="mt-2 text-[32px] font-serif leading-tight tracking-tight text-gold tabular-nums"
                     >
                       0,00 {symbol}
+                    </p>
+                  )}
+                  {!isLoading && (
+                    <p className="mt-1 text-sm text-muted-foreground tabular-nums">
+                      En wallet {fmt(walletTotal, decimals)} {symbol}
+                      {invested > BigInt(0) && (
+                        <>
+                          {" "}
+                          · En Rewards {fmt(invested, decimals)} {symbol}
+                        </>
+                      )}
                     </p>
                   )}
 
