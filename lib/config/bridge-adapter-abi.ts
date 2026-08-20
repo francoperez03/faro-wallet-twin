@@ -1,6 +1,6 @@
-// ponytail: ABI del bridge adapter reconstruido por verificación empírica on-chain, no
-// bajado del Notion (todavía no disponible al momento de esta ejecución). Reemplazar por
-// el ABI real del Notion en cuanto esté disponible.
+// ABI verificado doblemente: reconstruido por sondeo on-chain y CONFIRMADO contra el
+// bridge-adapter-abi.ts oficial del Notion de Twin (2026-08-20): TwinBridgeAdapter
+// extiende OFTCore (LayerZero V2), quoteSend/send con las mismas tuplas SendParam y fee.
 //
 // Evidencia (ver 01-04-SUMMARY.md para el detalle completo):
 // - eth_call a 0x4821FBf47B261F0D52Ba0F941CF67b8648f82691 (adapter Arbitrum) vía
@@ -20,7 +20,7 @@
 //
 // Esta combinación (13/13 selectores + 4 lecturas de estado consistentes con el registry
 // del proyecto) es evidencia fuerte de que el adapter implementa IOFT sin desviaciones.
-// No es una garantía absoluta sin el ABI/fuente real del Notion.
+// Coincide con el ABI oficial del Notion (quoteSend y send idénticos).
 export const bridgeAdapterAbi = [
   {
     type: "function",
