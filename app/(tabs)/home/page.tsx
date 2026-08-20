@@ -1,6 +1,7 @@
 "use client";
 
 import { usePrivy } from "@privy-io/react-auth";
+import { formatUnits } from "viem";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -13,6 +14,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { BalanceList } from "@/components/balance-list";
+import { useTokenBalances } from "@/lib/hooks/use-token-balances";
+import { TOKENS } from "@/lib/config/tokens";
 
 function truncateAddress(address: string) {
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -41,14 +45,30 @@ export default function HomePage() {
     );
   }
 
-  const walletAddress = user?.wallet?.address;
+  const walletAddress = user?.wallet?.address as `0x${string}` | undefined;
+  const { perChain, total, errors, isLoading } = useTokenBalances(walletAddress);
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
         <p className="text-sm text-zinc-500">Saldo total</p>
-        <Skeleton className="mt-2 h-10 w-48" />
+        {isLoading ? (
+          <Skeleton className="mt-2 h-10 w-48" />
+        ) : (
+          <p className="mt-2 text-[32px] font-semibold leading-tight tracking-tight text-zinc-900 tabular-nums">
+            {formatUnits(total, TOKENS.ARGt.decimals)} {TOKENS.ARGt.symbol}
+          </p>
+        )}
       </div>
+
+      {!isLoading && (
+        <BalanceList
+          perChain={perChain}
+          errors={errors}
+          decimals={TOKENS.ARGt.decimals}
+          symbol={TOKENS.ARGt.symbol}
+        />
+      )}
 
       <div className="rounded-lg bg-zinc-100 p-4">
         <p className="text-sm text-zinc-500">Tu wallet</p>
