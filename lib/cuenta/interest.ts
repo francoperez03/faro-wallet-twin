@@ -26,6 +26,14 @@ async function writeSyncState(client: PoolClient, key: string, value: string): P
  * argt_balance, bigint floor. Idempotente: sin yield nuevo, delta <= 0 y no acredita nada.
  */
 export async function accrueInterest(): Promise<{ deltaAccrued: bigint; usersCredited: number }> {
+  // D-08(c): barrido de respaldo de depositos pendientes en cada corrida del cron.
+  // Si falla no bloquea el devengo (el sync tiene sus propios triggers en la UI).
+  try {
+    const { syncDeposits } = await import("./deposits");
+    await syncDeposits();
+  } catch {
+    // barrido best-effort
+  }
   const vaultShares = await publicClient.readContract({
     address: VAULT_ARGT_PRIME.address,
     abi: vaultAbi,
