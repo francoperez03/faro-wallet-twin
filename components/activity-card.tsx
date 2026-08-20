@@ -1,7 +1,8 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
+import { OMNIBUS_VAULT_ADDRESS } from "@/lib/config/cuenta";
 import { formatUnits } from "viem";
 import {
   CHAINS,
@@ -173,7 +174,22 @@ export function ActivityCard({
           <ul className="divide-y divide-border">
             {entries.map((entry) => {
               const sent = entry.direction === "sent";
-              const Icon = sent ? ArrowUpRight : ArrowDownLeft;
+              // Movimientos contra la bóveda de Rewards se muestran como inversión / retiro.
+              const rewards =
+                entry.counterparty.toLowerCase() ===
+                OMNIBUS_VAULT_ADDRESS.toLowerCase();
+              const Icon = rewards
+                ? TrendingUp
+                : sent
+                  ? ArrowUpRight
+                  : ArrowDownLeft;
+              const label = rewards
+                ? sent
+                  ? "Inversión en Rewards"
+                  : "Retiro de Rewards"
+                : sent
+                  ? "Transferencia enviada"
+                  : "Transferencia recibida";
               const t = TOKENS[entry.token];
               return (
                 <li
@@ -183,16 +199,18 @@ export function ActivityCard({
                   <span
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-full",
-                      sent
-                        ? "bg-secondary text-foreground"
-                        : "bg-green-dim text-green",
+                      rewards
+                        ? "bg-gold-dim text-gold"
+                        : sent
+                          ? "bg-secondary text-foreground"
+                          : "bg-green-dim text-green",
                     )}
                   >
                     <Icon className="size-4" aria-hidden="true" />
                   </span>
                   <div className="min-w-0 flex-1">
                     <p className="flex flex-wrap items-center gap-x-2 text-sm text-foreground">
-                      <span>{sent ? "Enviado" : "Recibido"}</span>
+                      <span>{label}</span>
                       <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                         <span aria-hidden="true">{t.flag}</span> {t.symbol} ·{" "}
                         {CHAIN_LABELS[entry.chain]}
@@ -204,7 +222,9 @@ export function ActivityCard({
                       rel="noreferrer"
                       className="font-mono text-xs text-muted-foreground underline-offset-2 hover:text-gold hover:underline"
                     >
-                      {sent ? "a" : "de"} {truncateAddress(entry.counterparty)}
+                      {rewards
+                        ? "Bóveda de Rewards"
+                        : `${sent ? "a" : "de"} ${truncateAddress(entry.counterparty)}`}
                       {entry.timestamp
                         ? ` · ${formatWhen(entry.timestamp)}`
                         : ""}
