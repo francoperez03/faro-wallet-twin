@@ -383,12 +383,10 @@ export default function HomePage() {
                         onClick={() => setShowBreakdown((v) => !v)}
                         className="flex min-h-11 w-full items-center justify-between text-left"
                       >
-                        <span className="font-mono text-[11px] uppercase tracking-widest text-muted-foreground">
-                          Por red
-                        </span>
+                        <span className="text-sm font-semibold text-foreground">Por red</span>
                         <ChevronDown
                           aria-hidden="true"
-                          className={`size-4 text-muted-foreground transition-transform duration-300 ${showBreakdown ? "rotate-180" : ""}`}
+                          className={`size-5 text-gold transition-transform duration-300 ${showBreakdown ? "rotate-180" : ""}`}
                         />
                       </button>
                       {showBreakdown && (
