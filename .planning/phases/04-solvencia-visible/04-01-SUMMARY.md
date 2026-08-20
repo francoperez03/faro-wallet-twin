@@ -63,20 +63,22 @@ completed: 2026-08-20
 - `components/cuenta/solvency-badge.tsx` wireado debajo del saldo en `app/(tabs)/cuenta/page.tsx`: pill verde si el corte tiene menos de 26h, ambar si vencido, texto neutro sin cortes, boton "Verifica tu inclusion" hacia `/cuenta/verificar` (ruta de Plan 02, en paralelo)
 - `app/status/twin-neobank/page.tsx`: ruta publica fuera de `(tabs)`, sin ningun chequeo de sesion; muestra veredictos por token, cobertura por bucket, frescura, historial completo con link a la tx en Arbiscan y el `declaredMask` explicado en texto claro (`components/status/declared-mask.tsx`); selector de registry solo si `REGISTRIES.length > 1` (hoy hay uno solo, no aparece); badge "Datos sinteticos" para registries cuyo label matchea `/fixture|sintetic/i`
 - Verificado contra el Registry real en Arbitrum One via curl directo a `arb1.arbitrum.io/rpc`: `eth_getLogs` con `fromBlock: 0x0` y filtro por address devuelve el `CutPublished` real (corteId `0xdff809cf...`, publishedAt `0x6a86832e`), confirmando que `useCutHistory` no necesita paginacion en este estado del contrato
-- `npm run build` pasa limpio en los tres commits
+- D-08(a) trigger agregado (gap del verifier de fase 3): `app/(tabs)/cuenta/page.tsx` dispara `POST /api/cuenta/sync-deposits` fire-and-forget al cargar Home (mismo token de Privy que ya usaba para `/api/cuenta/account`), por si el usuario cierra `/cuenta/pasar` antes de que termine su polling; errores ignorados, no bloquea el render
+- `npm run build` pasa limpio en todos los commits
 
 ## Task Commits
 
 1. **Task 1: Config de registries + ABI + hooks de lectura** - `28c3f05` (feat)
 2. **Task 2: Badge de solvencia en Cuenta·Home (SOL-03)** - `8af02a9` (feat)
 3. **Task 3: Pagina publica /status/twin-neobank (SOL-05)** - `65225b4` (feat)
+4. **D-08(a) trigger de sync-deposits en Cuenta Home** (pedido por team-lead, gap del verifier de fase 3) - `d6710f3` (fix)
 
 ## Files Created/Modified
 
 - `lib/sobrecito/registry-abi.ts` - ABI + tipo Cut
 - `lib/sobrecito/use-registry.ts` - `useLatestCut`, `useCutHistory`
 - `components/cuenta/solvency-badge.tsx` - badge verde/ambar/neutro + link a verificacion
-- `app/(tabs)/cuenta/page.tsx` - agregado `<SolvencyBadge />` debajo del saldo, sin reordenar el resto
+- `app/(tabs)/cuenta/page.tsx` - agregado `<SolvencyBadge />` debajo del saldo, sin reordenar el resto; agregado trigger fire-and-forget de `POST /api/cuenta/sync-deposits` en `load()` (D-08(a))
 - `app/status/twin-neobank/page.tsx` - pagina publica completa
 - `components/status/cut-history.tsx` - lista del historial con link a tx por chain (via `CHAIN_IDS`/`EXPLORER_TX_URL` de `lib/config/tokens.ts`)
 - `components/status/declared-mask.tsx` - texto fijo de que esta probado (cL) vs declarado (cR, verdicts, coverageBps, attestationHash)
@@ -116,4 +118,4 @@ Ninguno fuera del `threat_model` del plan. `REGISTRIES` sigue viniendo solo de e
 *Completed: 2026-08-20*
 
 ## Self-Check: PASSED
-All 7 created/modified files verified on disk. All 3 task commits (`28c3f05`, `8af02a9`, `65225b4`) verified in git log.
+All 7 created/modified files verified on disk. All 4 commits (`28c3f05`, `8af02a9`, `65225b4`, `d6710f3`) verified in git log.
