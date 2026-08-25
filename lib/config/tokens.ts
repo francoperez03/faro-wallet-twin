@@ -69,6 +69,18 @@ export const TOKENS = {
       ethereum: "0x619FB742CB2B77361793DAaEBac8017642178a56",
     } satisfies Record<ChainKey, `0x${string}`>,
   },
+  COLt: {
+    symbol: "COLt",
+    name: "Peso colombiano",
+    flag: "🇨🇴",
+    decimals: 18,
+    addresses: {
+      arbitrum: "0xa16d5DB80A45157E0e451750B81FF0CC0b61d558",
+      base: "0xD70ad085684b2A9f4B5d54D7BDB2ecA37a273216",
+      polygon: "0x1EA02bA45fC146F534b371c49fBB2a4c86dce93d",
+      ethereum: "0xf016413834E6D1A14F3D628B11D6Ef725a6bdbDD",
+    } satisfies Record<ChainKey, `0x${string}`>,
+  },
 } as const;
 
 export type TokenKey = keyof typeof TOKENS;

@@ -163,7 +163,9 @@ export function ActivityCard({
             </p>
             <p className="text-sm text-muted-foreground">
               Cuando envíes o recibas{" "}
-              {token === ALL ? "ARGt o BOLt" : TOKENS[token].symbol}
+              {token === ALL
+                ? TOKEN_KEYS.map((k) => TOKENS[k].symbol).join(", ")
+                : TOKENS[token].symbol}
               {chain === ALL ? "" : ` en ${CHAIN_LABELS[chain]}`}, lo vas a ver
               acá.
             </p>
