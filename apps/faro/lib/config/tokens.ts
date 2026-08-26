@@ -98,8 +98,8 @@ export const TOKENS = {
 // Cambio ARGt ↔ MEXt en Arbitrum: Curve ARGt/USDT0 (Twin) + FaroPMM (packages/pmm, deployments/arbitrum.json).
 export const SWAP = {
   chain: "arbitrum" as ChainKey,
-  router: "0x01faAC04441078cBe93EdE36345CeFB96A1d4830" as `0x${string}`,
-  pmm: "0xe83292925846082EB93e47AcaEaf7f64cB53Cee2" as `0x${string}`,
+  router: "0x3D1bB51E809c3d807bCAA487de4b0E370B9fF3D3" as `0x${string}`,
+  pmm: "0x8Add360E4A4A34C87989088c118Ca0cb1238c5e5" as `0x${string}`,
   curvePool: "0x356D349dA9ADd7Efb56a35fAB939A2c6D852f853" as `0x${string}`,
   usdt0: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" as `0x${string}`,
   pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C" as `0x${string}`,

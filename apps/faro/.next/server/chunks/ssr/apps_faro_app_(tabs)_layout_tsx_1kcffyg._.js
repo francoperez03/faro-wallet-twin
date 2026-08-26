@@ -1,3 +1,0 @@
-module.exports=[643249,a=>{"use strict";a.s(["default",()=>b]);let b=(0,a.i(211857).registerClientReference)(function(){throw Error("Attempted to call the default export of [project]/apps/faro/app/(tabs)/layout.tsx from the server, but it's on the client. It's not possible to invoke a client function from the server, it can only be rendered as a Component or passed to props of a Client Component.")},"[project]/apps/faro/app/(tabs)/layout.tsx","default")},297281,a=>{"use strict";var b=a.i(643249);a.n(b)},78665,function(a){a.n(a.i(297281))}];
-
-//# sourceMappingURL=apps_faro_app_%28tabs%29_layout_tsx_1kcffyg._.js.map

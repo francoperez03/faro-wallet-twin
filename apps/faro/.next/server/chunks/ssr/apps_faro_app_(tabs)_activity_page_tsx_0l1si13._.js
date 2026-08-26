@@ -1,3 +1,0 @@
-module.exports=[152250,a=>{"use strict";var b=a.i(187924),c=a.i(985017),d=a.i(110328),e=a.i(187052),f=a.i(558246);a.s(["default",0,function(){let{user:a}=(0,e.usePrivy)(),g=a?.wallet?.address;return(0,b.jsxs)("div",{className:(0,d.cn)(c.PAGE_WIDTH,"flex flex-col gap-6 p-6 lg:p-8"),children:[(0,b.jsx)("h1",{className:"font-serif text-3xl text-foreground",children:"Actividad"}),(0,b.jsx)(f.ActivityCard,{walletAddress:g})]})}])}];
-
-//# sourceMappingURL=apps_faro_app_%28tabs%29_activity_page_tsx_0l1si13._.js.map

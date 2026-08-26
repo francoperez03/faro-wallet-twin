@@ -15,21 +15,35 @@ contract Deploy is Script {
     address constant PYTH = 0xff1a0f4744e8582DF1aE09D5611b887B6a12925C;
     bytes32 constant FEED = 0xe13b1c1ffb32f34e1be9545583f01ef385fde7f42ee66049d30570dc866b77ca;
 
+    struct P {
+        uint256 k;
+        uint256 feeBps;
+        uint256 maxAge;
+        uint256 maxConfBps;
+        uint256 maxTrade;
+        uint256 seed;
+        address owner;
+    }
+
     function run() external {
         uint256 pk = vm.envUint("OPS_PRIVATE_KEY");
-        address owner = vm.addr(pk);
-        uint256 k = vm.envOr("K", uint256(0.1e18));
-        uint256 feeBps = vm.envOr("FEE_BPS", uint256(40));
-        uint256 maxAge = vm.envOr("MAX_AGE", uint256(60));
-        uint256 maxConfBps = vm.envOr("MAX_CONF_BPS", uint256(50));
-        uint256 seed = vm.envOr("SEED_MEXT", uint256(0));
+        P memory p = P({
+            k: vm.envOr("K", uint256(0.05e18)),
+            feeBps: vm.envOr("FEE_BPS", uint256(40)),
+            maxAge: vm.envOr("MAX_AGE", uint256(60)),
+            maxConfBps: vm.envOr("MAX_CONF_BPS", uint256(50)),
+            maxTrade: vm.envOr("MAX_TRADE_QUOTE", uint256(2_500e18)),
+            seed: vm.envOr("SEED_MEXT", uint256(0)),
+            owner: vm.addr(pk)
+        });
+        address owner = p.owner;
 
         vm.startBroadcast(pk);
-        FaroPMM pmm = new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, k, feeBps, maxAge, maxConfBps, owner);
+        FaroPMM pmm = _deployPmm(p);
         FaroRouter router = new FaroRouter(CURVE, payable(address(pmm)));
-        if (seed > 0) {
-            IERC20(MEXT).approve(address(pmm), seed);
-            pmm.deposit(seed, 0, true);
+        if (p.seed > 0) {
+            IERC20(MEXT).approve(address(pmm), p.seed);
+            pmm.deposit(p.seed, 0, true);
         }
         vm.stopBroadcast();
 
@@ -42,5 +56,9 @@ contract Deploy is Script {
         json = string.concat(json, ',"mext":"', vm.toString(MEXT), '","pyth":"', vm.toString(PYTH), '"');
         json = string.concat(json, ',"feedId":"', vm.toString(FEED), '","owner":"', vm.toString(owner), '"}\n');
         vm.writeFile("deployments/arbitrum.json", json);
+    }
+
+    function _deployPmm(P memory p) internal returns (FaroPMM) {
+        return new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, p.k, p.feeBps, p.maxAge, p.maxConfBps, p.maxTrade, p.owner);
     }
 }

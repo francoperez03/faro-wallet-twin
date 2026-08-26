@@ -32,6 +32,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
     uint256 public feeBps; // sobre el output
     uint256 public maxAge; // segundos
     uint256 public maxConfBps; // conf/price máximo aceptado
+    uint256 public maxTradeQuote; // tope por operación en quote (1e18); 0 = sin tope
 
     // estado (quote en 1e18)
     uint256 public B;
@@ -49,13 +50,14 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         uint256 oraclePrice,
         uint256 fee
     );
-    event Params(uint256 k, uint256 feeBps, uint256 maxAge, uint256 maxConfBps);
+    event Params(uint256 k, uint256 feeBps, uint256 maxAge, uint256 maxConfBps, uint256 maxTradeQuote);
     event Inventory(uint256 B, uint256 Q, uint256 B0, uint256 Q0, PMMPricing.RState R);
 
     error StaleOrWideOracle();
     error SlippageExceeded();
     error InsufficientInventory();
     error BadParams();
+    error TradeTooLarge();
 
     constructor(
         address base_,
@@ -67,6 +69,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         uint256 feeBps_,
         uint256 maxAge_,
         uint256 maxConfBps_,
+        uint256 maxTradeQuote_,
         address owner_
     ) Ownable(owner_) {
         BASE = IERC20(base_);
@@ -74,7 +77,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         QUOTE_SCALE = 10 ** (18 - quoteDecimals);
         PYTH = IPyth(pyth_);
         FEED_ID = feedId_;
-        _setParams(k_, feeBps_, maxAge_, maxConfBps_);
+        _setParams(k_, feeBps_, maxAge_, maxConfBps_, maxTradeQuote_);
     }
 
     // ============ swaps ============
@@ -90,6 +93,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         uint256 i = _freshPrice(pythUpdate);
         PMMPricing.PMMState memory s = _state(i);
         (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellBaseToken(s, baseIn);
+        if (maxTradeQuote > 0 && grossOut > maxTradeQuote) revert TradeTooLarge();
         uint256 fee = (grossOut * feeBps) / 10_000;
         uint256 netOut = grossOut - fee;
         if (netOut > Q) revert InsufficientInventory();
@@ -112,6 +116,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         whenNotPaused
         returns (uint256 baseOut)
     {
+        if (maxTradeQuote > 0 && quoteIn * QUOTE_SCALE > maxTradeQuote) revert TradeTooLarge();
         uint256 i = _freshPrice(pythUpdate);
         PMMPricing.PMMState memory s = _state(i);
         (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellQuoteToken(s, quoteIn * QUOTE_SCALE);
@@ -194,8 +199,11 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         emit Inventory(B, Q, B0, Q0, R);
     }
 
-    function setParams(uint256 k_, uint256 feeBps_, uint256 maxAge_, uint256 maxConfBps_) external onlyOwner {
-        _setParams(k_, feeBps_, maxAge_, maxConfBps_);
+    function setParams(uint256 k_, uint256 feeBps_, uint256 maxAge_, uint256 maxConfBps_, uint256 maxTradeQuote_)
+        external
+        onlyOwner
+    {
+        _setParams(k_, feeBps_, maxAge_, maxConfBps_, maxTradeQuote_);
     }
 
     function pause() external onlyOwner {
@@ -232,13 +240,16 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         R = PMMPricing.RState.ONE;
     }
 
-    function _setParams(uint256 k_, uint256 feeBps_, uint256 maxAge_, uint256 maxConfBps_) internal {
+    function _setParams(uint256 k_, uint256 feeBps_, uint256 maxAge_, uint256 maxConfBps_, uint256 maxTradeQuote_)
+        internal
+    {
         if (k_ == 0 || k_ > DecimalMath.ONE || feeBps_ > 1_000 || maxAge_ == 0) revert BadParams();
         k = k_;
         feeBps = feeBps_;
         maxAge = maxAge_;
         maxConfBps = maxConfBps_;
-        emit Params(k_, feeBps_, maxAge_, maxConfBps_);
+        maxTradeQuote = maxTradeQuote_;
+        emit Params(k_, feeBps_, maxAge_, maxConfBps_, maxTradeQuote_);
     }
 
     /// @dev Publica el update de Pyth (si viene), cobra el fee y devuelve el sobrante; exige precio fresco.

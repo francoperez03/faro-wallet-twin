@@ -100,12 +100,12 @@ packages/pmm/              exchange contracts (Foundry, Arbitrum)
 
 | Contract | Address |
 |---|---|
-| FaroRouter | `0x01faAC04441078cBe93EdE36345CeFB96A1d4830` |
-| FaroPMM | `0xe83292925846082EB93e47AcaEaf7f64cB53Cee2` |
+| FaroRouter | `0x3D1bB51E809c3d807bCAA487de4b0E370B9fF3D3` |
+| FaroPMM | `0x8Add360E4A4A34C87989088c118Ca0cb1238c5e5` |
 | Curve ARGt/USDT0 (Twin) | `0x356D349dA9ADd7Efb56a35fAB939A2c6D852f853` |
 | Pyth (USD/MXN feed) | `0xff1a0f4744e8582DF1aE09D5611b887B6a12925C` |
 
-Faro seeds the PMM with MEXt only; the USD leg comes from the Curve pool. Price = Pyth oracle, adjusted by how far the MEXt inventory is from its target (`k`), plus a fee that stays in the pool. Unaudited and running in paper mode with a small inventory.
+Faro seeds the PMM with MEXt only; the USD leg comes from the Curve pool. Price = Pyth oracle, adjusted by how far the MEXt inventory is from its target (`k`), plus a fee that stays in the pool. Trades are capped at US$ 2,500 each so nobody pays a large deviation in one go. Unaudited and running in paper mode with a small inventory.
 
 ## Notes
 

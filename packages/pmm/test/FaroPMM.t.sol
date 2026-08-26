@@ -37,7 +37,7 @@ contract FaroPMMTest is Test {
         mext = new Token("MEXt", 18);
         usdt = new Token("USDT0", 6);
         pyth = new MockPyth(60, 1);
-        pmm = new FaroPMM(address(mext), address(usdt), 6, address(pyth), FEED, 0.1e18, 40, 60, 50, owner);
+        pmm = new FaroPMM(address(mext), address(usdt), 6, address(pyth), FEED, 0.05e18, 40, 60, 50, 2_500e18, owner);
         _publish(MXN_PER_USD, 20, block.timestamp);
         // seed: 200k MEXt, sin quote
         mext.mint(owner, 200_000e18);
@@ -88,7 +88,10 @@ contract FaroPMMTest is Test {
         (uint256 o1,,) = pmm.quoteSellQuote(100e6);
         bytes[] memory u = _update(MXN_PER_USD);
         vm.prank(user);
-        pmm.sellQuote{value: 1}(5_000e6, 0, user, u); // saca ~40 % del inventario
+        pmm.sellQuote{value: 1}(2_500e6, 0, user, u);
+        bytes[] memory u2 = _update(MXN_PER_USD);
+        vm.prank(user);
+        pmm.sellQuote{value: 1}(2_500e6, 0, user, u2); // ~40 % del inventario en dos operaciones
         (uint256 o2,,) = pmm.quoteSellQuote(100e6);
         assertLt(o2, o1); // mismos 100 USD compran menos MEXt
         (uint256 mid, uint256 i,) = pmm.midPrice();
@@ -139,8 +142,33 @@ contract FaroPMMTest is Test {
         pmm.sellQuote{value: 1}(100e6, 10_000e18, user, u);
     }
 
+    function test_tradeCapRejectsLargeSwap() public {
+        bytes[] memory u = _update(MXN_PER_USD);
+        vm.prank(user);
+        vm.expectRevert(FaroPMM.TradeTooLarge.selector);
+        pmm.sellQuote{value: 1}(2_501e6, 0, user, u);
+        bytes[] memory u2 = _update(MXN_PER_USD);
+        vm.prank(user);
+        uint256 got = pmm.sellQuote{value: 1}(2_500e6, 0, user, u2);
+        assertGt(got, 0);
+    }
+
+    function test_capOnSellBase() public {
+        // con USDT0 objetivo en el pool, una venta de MEXt que valga más que el tope revierte
+        usdt.mint(owner, 5_000e6);
+        vm.startPrank(owner);
+        usdt.approve(address(pmm), type(uint256).max);
+        pmm.deposit(0, 5_000e6, true);
+        vm.stopPrank();
+        bytes[] memory u = _update(MXN_PER_USD);
+        vm.prank(user);
+        vm.expectRevert(FaroPMM.TradeTooLarge.selector);
+        pmm.sellBase{value: 1}(60_000e18, 0, user, u); // ≈ US$ 3.540 > tope de 2.500
+    }
+
     function test_cannotDrainBase() public {
-        // 100k USD contra ~11,8k USD de inventario: la curva encarece hasta el infinito, nunca vacía el pool
+        vm.prank(owner);
+        pmm.setParams(0.05e18, 40, 60, 50, 0); // sin tope: la curva sola debe impedir el vaciado
         bytes[] memory u = _update(MXN_PER_USD);
         vm.prank(user);
         uint256 got = pmm.sellQuote{value: 1}(100_000e6, 0, user, u);
@@ -148,7 +176,7 @@ contract FaroPMMTest is Test {
         (uint256 b,,,,) = pmm.state();
         assertGt(b, 0);
         (uint256 mid, uint256 i,) = pmm.midPrice();
-        assertGt(mid, 2 * i); // precio medio más del doble del oráculo
+        assertGt(mid, 2 * i);
     }
 
     function test_feeAccruesToPool() public {
@@ -175,6 +203,6 @@ contract FaroPMMTest is Test {
         pmm.sellQuote{value: 1}(100e6, 0, user, u);
         vm.prank(user);
         vm.expectRevert();
-        pmm.setParams(0.2e18, 40, 60, 50);
+        pmm.setParams(0.2e18, 40, 60, 50, 0);
     }
 }

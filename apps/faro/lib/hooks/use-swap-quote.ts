@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useConfig } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import { CHAIN_IDS, SWAP, type SwapToken } from "@/lib/config/tokens";
-import { routerAbi } from "@/lib/config/swap-abi";
+import { pmmAbi, routerAbi } from "@/lib/config/swap-abi";
 
 export const SLIPPAGE_BPS = BigInt(50); // 0,5 %
 
@@ -19,6 +19,10 @@ export type SwapQuote = {
   /** Desvío de la cotización respecto de la referencia, en bps (positivo = peor para el usuario). */
   impactBps: number;
   oracleAge: number;
+  /** Tope por operación del PMM en USDT0 (6 dec); 0 = sin tope. */
+  maxTradeUsdt: bigint;
+  /** true si esta operación supera el tope. */
+  overCap: boolean;
 };
 
 /** Cotización en vivo ARGt ↔ MEXt vía FaroRouter (Curve + PMM). `amountIn` en unidades base del token de origen. */
@@ -35,7 +39,7 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
       });
       if (!client || !amountIn) throw new Error("sin cliente");
       const argtToMext = from === "ARGt";
-      const [quote, ref] = await Promise.all([
+      const [quote, ref, maxTradeQuote] = await Promise.all([
         client.readContract({
           address: SWAP.router,
           abi: routerAbi,
@@ -46,6 +50,11 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
           address: SWAP.router,
           abi: routerAbi,
           functionName: "referenceArgtPerMext",
+        }),
+        client.readContract({
+          address: SWAP.pmm,
+          abi: pmmAbi,
+          functionName: "maxTradeQuote",
         }),
       ]);
       const [amountOut, usdtMid, , oracleAge] = quote;
@@ -72,6 +81,10 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
         referenceArgtPerMext,
         impactBps,
         oracleAge: Number(oracleAge),
+        maxTradeUsdt: maxTradeQuote / BigInt(10) ** BigInt(12),
+        overCap:
+          maxTradeQuote > BigInt(0) &&
+          usdtMid * BigInt(10) ** BigInt(12) > maxTradeQuote,
       };
     },
   });

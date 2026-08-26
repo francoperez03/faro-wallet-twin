@@ -23,7 +23,7 @@ contract ForkTest is Test {
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
         // maxAge enorme: en el fork no podemos publicar un update firmado de Pyth, usamos el último on-chain
-        pmm = new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, 0.1e18, 40, 365 days * 10, 100, owner);
+        pmm = new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, 0.05e18, 40, 365 days * 10, 100, 0, owner);
         router = new FaroRouter(CURVE, payable(address(pmm)));
         deal(MEXT, owner, 50_000e18);
         vm.startPrank(owner);

@@ -216,6 +216,17 @@ export function SwapPanel({
                 mínimo {fmt(q.minOut, TOKENS[to].decimals)} {TOKENS[to].symbol}{" "}
                 (0,5 % de tolerancia)
               </p>
+              {q.impactBps > 150 && !q.overCap && (
+                <p className="text-amber">
+                  Conviene partirla en dos operaciones.
+                </p>
+              )}
+              {q.overCap && (
+                <p className="text-amber">
+                  Supera el máximo por operación (≈ US${" "}
+                  {fmt(q.maxTradeUsdt, 6, 0)}). Hacelo en partes.
+                </p>
+              )}
               <p className="text-xs text-muted-foreground">
                 Ruta: {TOKENS[from].symbol} → USDT0 (Curve) →{" "}
                 {TOKENS[to].symbol} (Faro)

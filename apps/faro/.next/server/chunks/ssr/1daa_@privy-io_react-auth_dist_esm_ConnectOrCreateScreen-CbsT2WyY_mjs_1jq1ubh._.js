@@ -1,3 +1,0 @@
-module.exports=[894018,a=>{"use strict";var b=a.i(187924),c=a.i(828108),d=a.i(222414);a.i(572131),a.i(366962),a.i(562724),a.i(906301),a.i(781034),a.i(794954);let e={component:()=>{let a=(0,c.u)();return a.loginMethodsAndOrder&&a.loginMethodsAndOrder.primary.length>0?(0,b.jsx)(d.C,{connectOnly:!0}):(0,b.jsx)(d.L,{connectOnly:!0})}};a.s(["ConnectOrCreateScreen",0,e,"default",0,e])}];
-
-//# sourceMappingURL=1daa_%40privy-io_react-auth_dist_esm_ConnectOrCreateScreen-CbsT2WyY_mjs_1jq1ubh._.js.map

@@ -81,6 +81,13 @@ export const pmmAbi = [
     inputs: [],
     outputs: [{ name: "", type: "bool" }],
   },
+  {
+    type: "function",
+    name: "maxTradeQuote",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
 ] as const;
 
 export const pythAbi = [

@@ -14,6 +14,7 @@ contract Status is Script {
         _inventory(pmm);
         _prices(pmm, router);
         console2.log("k / feeBps / maxAge", pmm.k(), pmm.feeBps(), pmm.maxAge());
+        console2.log("maxTradeQuote 1e18", pmm.maxTradeQuote());
         console2.log("paused", pmm.paused());
     }
 
