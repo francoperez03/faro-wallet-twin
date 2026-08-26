@@ -7,6 +7,7 @@ import { animate } from "animejs";
 import {
   ArrowDownLeft,
   ArrowLeft,
+  ArrowLeftRight,
   ArrowUpRight,
   ChevronDown,
   TrendingUp,
@@ -21,6 +22,7 @@ import { RebalancePanel } from "@/components/rebalance-panel";
 import { Faro } from "@/components/faro";
 import { SendPanel } from "@/components/send-panel";
 import { ReceivePanel } from "@/components/receive-panel";
+import { SwapPanel } from "@/components/swap-panel";
 import { RewardsPanel } from "@/components/rewards-panel";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
 import { useVaultPosition } from "@/lib/hooks/use-vault-position";
@@ -39,7 +41,7 @@ function fmt(value: bigint, decimals: number) {
     maximumFractionDigits: 2,
   });
 }
-type PanelKey = "enviar" | "recibir";
+type PanelKey = "enviar" | "recibir" | "cambiar";
 
 type Step = "home" | "rewards";
 const STEP_INDEX: Record<Step, number> = { home: 0, rewards: 1 };
@@ -380,6 +382,13 @@ export default function HomePage() {
                           />
                           Recibir
                         </TabsTrigger>
+                        <TabsTrigger value="cambiar" className={TAB_TRIGGER}>
+                          <ArrowLeftRight
+                            className="size-4"
+                            aria-hidden="true"
+                          />
+                          Cambiar
+                        </TabsTrigger>
                       </TabsList>
 
                       <TabsContent value="enviar">
@@ -395,6 +404,13 @@ export default function HomePage() {
                         {walletAddress && (
                           <ReceivePanel address={walletAddress} />
                         )}
+                      </TabsContent>
+                      <TabsContent value="cambiar">
+                        <SwapPanel
+                          walletAddress={walletAddress}
+                          initialFrom={token === "MEXt" ? "MEXt" : "ARGt"}
+                          onDone={() => void refetch()}
+                        />
                       </TabsContent>
                     </Tabs>
                   )}
@@ -430,7 +446,11 @@ export default function HomePage() {
                                     Ethereum
                                   </span>
                                   <span className="tabular-nums text-sm text-foreground">
-                                    {fmt(perChain.ethereum ?? BigInt(0), decimals)} {symbol}
+                                    {fmt(
+                                      perChain.ethereum ?? BigInt(0),
+                                      decimals,
+                                    )}{" "}
+                                    {symbol}
                                   </span>
                                 </div>
                               )}

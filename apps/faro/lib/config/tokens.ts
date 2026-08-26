@@ -81,7 +81,33 @@ export const TOKENS = {
       ethereum: "0xf016413834E6D1A14F3D628B11D6Ef725a6bdbDD",
     } satisfies Record<ChainKey, `0x${string}`>,
   },
+  MEXt: {
+    symbol: "MEXt",
+    name: "Peso mexicano",
+    flag: "🇲🇽",
+    decimals: 18,
+    addresses: {
+      arbitrum: "0xb96aA6babCcD738d6644ADd4912fE5eFbEBF5a25",
+      base: "0x59863989d080B22476DB95656d0C3CC18be92214",
+      polygon: "0xb9A848a8E1AFf1a16A27F1AD3B66D873d5C38D62",
+      ethereum: "0x25DF36D0ec7D26EC791316167A5E949e65c9F8E5",
+    } satisfies Record<ChainKey, `0x${string}`>,
+  },
 } as const;
+
+// Cambio ARGt ↔ MEXt en Arbitrum: Curve ARGt/USDT0 (Twin) + FaroPMM (packages/pmm, deployments/arbitrum.json).
+export const SWAP = {
+  chain: "arbitrum" as ChainKey,
+  router: "0x01faAC04441078cBe93EdE36345CeFB96A1d4830" as `0x${string}`,
+  pmm: "0xe83292925846082EB93e47AcaEaf7f64cB53Cee2" as `0x${string}`,
+  curvePool: "0x356D349dA9ADd7Efb56a35fAB939A2c6D852f853" as `0x${string}`,
+  usdt0: "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9" as `0x${string}`,
+  pyth: "0xff1a0f4744e8582DF1aE09D5611b887B6a12925C" as `0x${string}`,
+  feedId:
+    "0xe13b1c1ffb32f34e1be9545583f01ef385fde7f42ee66049d30570dc866b77ca" as `0x${string}`,
+  pairs: ["ARGt", "MEXt"] as const,
+};
+export type SwapToken = (typeof SWAP.pairs)[number];
 
 export type TokenKey = keyof typeof TOKENS;
 export const TOKEN_KEYS = Object.keys(TOKENS) as TokenKey[];

@@ -1,7 +1,12 @@
 "use client";
 
 import { useId, useState } from "react";
-import { ArrowDownLeft, ArrowUpRight, TrendingUp } from "lucide-react";
+import {
+  ArrowDownLeft,
+  ArrowLeftRight,
+  ArrowUpRight,
+  TrendingUp,
+} from "lucide-react";
 import { formatUnits } from "viem";
 import {
   CHAINS,
@@ -9,6 +14,7 @@ import {
   EXPLORER_TX_URL,
   TOKENS,
   TOKEN_KEYS,
+  SWAP,
   VAULT_ARGT_PRIME,
   type ChainKey,
   type TokenKey,
@@ -20,6 +26,9 @@ import { LoadingPhrases } from "@/components/loading-phrases";
 import { cn, truncateAddress } from "@/lib/utils";
 
 const ALL = "all";
+const SWAP_ADDRESSES = new Set(
+  [SWAP.router, SWAP.pmm, SWAP.curvePool].map((a) => a.toLowerCase()),
+);
 const LOADING_PHRASES = [
   "Leyendo Arbitrum…",
   "Leyendo Base…",
@@ -180,18 +189,26 @@ export function ActivityCard({
               const rewards =
                 entry.counterparty.toLowerCase() ===
                 VAULT_ARGT_PRIME.address.toLowerCase();
-              const Icon = rewards
-                ? TrendingUp
-                : sent
-                  ? ArrowUpRight
-                  : ArrowDownLeft;
-              const label = rewards
+              // Patas de un cambio (router/PMM/pool de Curve) se muestran como "Cambio".
+              const swap = SWAP_ADDRESSES.has(entry.counterparty.toLowerCase());
+              const Icon = swap
+                ? ArrowLeftRight
+                : rewards
+                  ? TrendingUp
+                  : sent
+                    ? ArrowUpRight
+                    : ArrowDownLeft;
+              const label = swap
                 ? sent
-                  ? "Inversión en Rewards"
-                  : "Retiro de Rewards"
-                : sent
-                  ? "Transferencia enviada"
-                  : "Transferencia recibida";
+                  ? "Cambio: entregado"
+                  : "Cambio: recibido"
+                : rewards
+                  ? sent
+                    ? "Inversión en Rewards"
+                    : "Retiro de Rewards"
+                  : sent
+                    ? "Transferencia enviada"
+                    : "Transferencia recibida";
               const t = TOKENS[entry.token];
               return (
                 <li
@@ -201,7 +218,7 @@ export function ActivityCard({
                   <span
                     className={cn(
                       "flex size-9 shrink-0 items-center justify-center rounded-full",
-                      rewards
+                      rewards || swap
                         ? "bg-gold-dim text-gold"
                         : sent
                           ? "bg-secondary text-foreground"
@@ -224,9 +241,11 @@ export function ActivityCard({
                       rel="noreferrer"
                       className="font-mono text-xs text-muted-foreground underline-offset-2 hover:text-gold hover:underline"
                     >
-                      {rewards
-                        ? "Vault ARGt Prime"
-                        : `${sent ? "a" : "de"} ${truncateAddress(entry.counterparty)}`}
+                      {swap
+                        ? "Cambio ARGt ↔ MEXt"
+                        : rewards
+                          ? "Vault ARGt Prime"
+                          : `${sent ? "a" : "de"} ${truncateAddress(entry.counterparty)}`}
                       {entry.timestamp
                         ? ` · ${formatWhen(entry.timestamp)}`
                         : ""}
