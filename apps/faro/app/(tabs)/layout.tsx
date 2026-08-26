@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePrivy } from "@privy-io/react-auth";
-import { KeyRound, LogOut } from "lucide-react";
+import { Copy, KeyRound, LogOut } from "lucide-react";
+import { toast } from "sonner";
 import { PRODUCT_NAME } from "@/lib/config/app";
 import { truncateAddress } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,9 +34,21 @@ export default function TabsLayout({
         </Link>
         <div className="flex items-center gap-2">
           {authenticated && walletAddress && (
-            <span className="rounded-full border border-border px-3 py-1.5 font-mono text-xs text-foreground">
+            <button
+              type="button"
+              aria-label="Copiar la dirección de tu wallet"
+              title={walletAddress}
+              onClick={() =>
+                navigator.clipboard
+                  .writeText(walletAddress)
+                  .then(() => toast.success("Dirección copiada"))
+                  .catch(() => toast.error("No se pudo copiar"))
+              }
+              className="flex min-h-11 items-center gap-1.5 rounded-full border border-border px-3 font-mono text-xs text-foreground hover:border-gold hover:text-gold"
+            >
               {truncateAddress(walletAddress)}
-            </span>
+              <Copy className="size-3.5" aria-hidden="true" />
+            </button>
           )}
           {authenticated && walletAddress && (
             <Dialog>
