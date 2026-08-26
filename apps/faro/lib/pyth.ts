@@ -11,3 +11,14 @@ export async function fetchPythUpdate(
     (d) => (d.startsWith("0x") ? d : `0x${d}`) as `0x${string}`,
   );
 }
+
+/** Precio actual de Hermes para `feedId` como número (price · 10^expo), sin tocar la cadena. */
+export async function fetchPythPrice(feedId: `0x${string}`): Promise<number> {
+  const res = await fetch(`${HERMES}?ids[]=${feedId}&encoding=hex`);
+  if (!res.ok) throw new Error(`Hermes ${res.status}`);
+  const json = (await res.json()) as {
+    parsed: { price: { price: string; expo: number } }[];
+  };
+  const p = json.parsed[0].price;
+  return Number(p.price) * 10 ** p.expo;
+}
