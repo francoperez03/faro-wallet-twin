@@ -1,13 +1,19 @@
 "use client";
 
 import { useDeferredValue, useState } from "react";
-import { useAccount, useConfig, useSwitchChain, useWriteContract } from "wagmi";
+import {
+  useAccount,
+  useConfig,
+  useReadContract,
+  useSwitchChain,
+  useWriteContract,
+} from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import { erc20Abi, formatUnits, parseUnits } from "viem";
 import { toast } from "sonner";
 import { ArrowLeftRight } from "lucide-react";
 import { CHAIN_IDS, SWAP, TOKENS, type SwapToken } from "@/lib/config/tokens";
-import { pythAbi, routerAbi } from "@/lib/config/swap-abi";
+import { pmmAbi, pythAbi, routerAbi } from "@/lib/config/swap-abi";
 import { fetchPythUpdate } from "@/lib/pyth";
 import { useSwapQuote } from "@/lib/hooks/use-swap-quote";
 import { useTokenBalances } from "@/lib/hooks/use-token-balances";
@@ -52,6 +58,16 @@ export function SwapPanel({
   const [stage, setStage] = useState<TxButtonStage>("idle");
   const [step, setStep] = useState<"aprobar" | "cambiar" | null>(null);
 
+  // Inventario del pool: MEXt disponible y USDT0 acumulado. "Sano" = hasta 10 % del inventario en una operación.
+  const pool = useReadContract({
+    address: SWAP.pmm,
+    abi: pmmAbi,
+    functionName: "state",
+    chainId: CHAIN_ID,
+    query: { refetchInterval: 30_000 },
+  });
+  const poolMext = pool.data?.[0] ?? BigInt(0);
+  const poolUsdt = pool.data?.[1] ?? BigInt(0);
   const fromBalances = useTokenBalances(walletAddress, from);
   const toBalances = useTokenBalances(walletAddress, to);
   const available = fromBalances.perChain[SWAP.chain] ?? BigInt(0);
@@ -161,6 +177,17 @@ export function SwapPanel({
         </span>
       </div>
 
+      <p className="text-xs text-muted-foreground tabular-nums">
+        En el pool: {fmt(poolMext, 18, 0)} MEXt · {fmt(poolUsdt, 6, 0)} USDT0
+        {poolMext > BigInt(0) && (
+          <>
+            {" "}
+            · sano hasta ≈ {fmt(poolMext / BigInt(10), 18, 0)} MEXt por
+            operación (10 % del pool)
+          </>
+        )}
+      </p>
+
       <div className="flex flex-col gap-2">
         <span className="text-sm text-muted-foreground">
           Monto en {TOKENS[from].symbol}
@@ -221,6 +248,15 @@ export function SwapPanel({
                   Conviene partirla en dos operaciones.
                 </p>
               )}
+              {to === "MEXt" &&
+                poolMext > BigInt(0) &&
+                q.amountOut > poolMext / BigInt(10) &&
+                !q.overCap && (
+                  <p className="text-amber">
+                    Se lleva más del 10 % del MEXt del pool: el precio se
+                    encarece rápido. Mejor en partes.
+                  </p>
+                )}
               {q.overCap && (
                 <p className="text-amber">
                   Supera el máximo por operación (≈ US${" "}
