@@ -5,6 +5,7 @@ import { useConfig } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
 import { CHAIN_IDS, SWAP, type SwapToken } from "@/lib/config/tokens";
 import { pmmAbi, routerAbi } from "@/lib/config/swap-abi";
+import { fetchPythPrice } from "@/lib/pyth";
 
 export const SLIPPAGE_BPS = BigInt(50); // 0,5 %
 
@@ -39,7 +40,7 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
       });
       if (!client || !amountIn) throw new Error("sin cliente");
       const argtToMext = from === "ARGt";
-      const [quote, ref, maxTradeQuote] = await Promise.all([
+      const [quote, ref, maxTradeQuote, freshMxnPerUsd] = await Promise.all([
         client.readContract({
           address: SWAP.router,
           abi: routerAbi,
@@ -56,8 +57,19 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
           abi: pmmAbi,
           functionName: "maxTradeQuote",
         }),
+        fetchPythPrice(SWAP.feedId).catch(() => null),
       ]);
-      const [amountOut, usdtMid, , oracleAge] = quote;
+      const [rawOut, usdtMid, oraclePrice, oracleAge] = quote;
+      // El view usa el último precio on-chain de Pyth (puede ser viejo); el swap usa el update fresco de
+      // Hermes. Ajustamos la salida por el cociente entre ambos. oraclePrice = USD por MEXt (1e18).
+      let amountOut = rawOut;
+      if (freshMxnPerUsd && oraclePrice > BigInt(0)) {
+        const onchainMxnPerUsd = 1e18 / Number(oraclePrice);
+        const ratio = argtToMext
+          ? freshMxnPerUsd / onchainMxnPerUsd
+          : onchainMxnPerUsd / freshMxnPerUsd;
+        amountOut = (rawOut * BigInt(Math.round(ratio * 1e9))) / BigInt(1e9);
+      }
       const [referenceArgtPerMext] = ref;
       const ONE = BigInt(10) ** BigInt(18);
       const effectiveArgtPerMext = argtToMext
