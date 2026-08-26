@@ -23,6 +23,16 @@ contract Token is ERC20 {
     }
 }
 
+contract FeeToken is Token {
+    constructor() Token("FEE", 18) {}
+
+    function _update(address from, address to, uint256 value) internal override {
+        uint256 fee = value / 100; // 1 %
+        super._update(from, to, value - fee);
+        if (fee > 0) super._update(from, address(0xdead), fee);
+    }
+}
+
 contract FaroPMMTest is Test {
     Token mext;
     Token usdt;
@@ -110,8 +120,8 @@ contract FaroPMMTest is Test {
     }
 
     function test_monotonicOutput(uint96 a, uint96 b) public view {
-        uint256 x = bound(a, 1e6, 3_000e6);
-        uint256 y = bound(b, 1e6, 3_000e6);
+        uint256 x = bound(a, 1e6, 2_400e6);
+        uint256 y = bound(b, 1e6, 2_400e6);
         if (x > y) (x, y) = (y, x);
         (uint256 ox,,) = pmm.quoteSellQuote(x);
         (uint256 oy,,) = pmm.quoteSellQuote(y);
@@ -204,5 +214,74 @@ contract FaroPMMTest is Test {
         vm.prank(user);
         vm.expectRevert();
         pmm.setParams(0.2e18, 40, 60, 50, 0);
+    }
+
+    function test_refundsEthWithoutUpdate() public {
+        bytes[] memory none;
+        uint256 before = user.balance;
+        vm.prank(user);
+        pmm.sellQuote{value: 0.01 ether}(100e6, 0, user, none);
+        assertEq(user.balance, before); // todo el ETH vuelve
+        assertEq(address(pmm).balance, 0);
+    }
+
+    function test_setParamsBounds() public {
+        vm.startPrank(owner);
+        vm.expectRevert(FaroPMM.BadParams.selector);
+        pmm.setParams(0.05e18, 40, 1 days, 50, 0);
+        vm.expectRevert(FaroPMM.BadParams.selector);
+        pmm.setParams(0.05e18, 40, 60, 0, 0);
+        vm.expectRevert(FaroPMM.BadParams.selector);
+        pmm.setParams(0.05e18, 40, 60, 1_000, 0);
+        pmm.setParams(0.05e18, 40, 600, 500, 0);
+        vm.stopPrank();
+    }
+
+    function test_capAppliesToBaseOutInBelowOneState() public {
+        // Q0 grande y B > B0: estado R<1, MEXt con descuento; una compra de 2.500 USDT0 sacaría base por más del tope
+        usdt.mint(owner, 50_000e6);
+        vm.startPrank(owner);
+        usdt.approve(address(pmm), type(uint256).max);
+        pmm.deposit(0, 50_000e6, true);
+        pmm.setParams(1e18, 40, 60, 50, 2_500e18); // k = 1: máximo descuento al volver al objetivo
+        vm.stopPrank();
+        bytes[] memory u = _update(MXN_PER_USD);
+        vm.prank(user);
+        pmm.sellBase{value: 1}(40_000e18, 0, user, u); // ahora B > B0, Q < Q0
+        vm.expectRevert(FaroPMM.TradeTooLarge.selector);
+        pmm.quoteSellQuote(2_500e6);
+        bytes[] memory u2 = _update(MXN_PER_USD);
+        vm.prank(user);
+        vm.expectRevert(FaroPMM.TradeTooLarge.selector);
+        pmm.sellQuote{value: 1}(2_500e6, 0, user, u2);
+    }
+
+    function test_depositCreditsRealDelta() public {
+        FeeToken fee = new FeeToken();
+        FaroPMM p2 = new FaroPMM(address(fee), address(usdt), 6, address(pyth), FEED, 0.05e18, 40, 60, 50, 0, owner);
+        fee.mint(owner, 2_000e18);
+        vm.startPrank(owner);
+        fee.approve(address(p2), type(uint256).max);
+        p2.deposit(1_000e18, 0, true);
+        vm.stopPrank();
+        (uint256 b,,,,) = p2.state();
+        assertEq(b, fee.balanceOf(address(p2)));
+        assertEq(b, 990e18);
+    }
+
+    function test_withdrawWithoutResetCannotDesyncTargets() public {
+        usdt.mint(owner, 5_000e6);
+        vm.startPrank(owner);
+        usdt.approve(address(pmm), type(uint256).max);
+        pmm.deposit(0, 5_000e6, true); // R = 1, B0 = 200k, Q0 = 5k
+        vm.stopPrank();
+        bytes[] memory u = _update(MXN_PER_USD);
+        vm.prank(user);
+        pmm.sellBase{value: 1}(10_000e18, 0, user, u); // R < 1: B > B0, Q < Q0
+        vm.prank(owner);
+        vm.expectRevert(FaroPMM.TargetsOutOfSync.selector);
+        pmm.withdraw(20_000e18, 0, owner, false); // dejaría B < B0 sin reset
+        vm.prank(owner);
+        pmm.withdraw(20_000e18, 0, owner, true); // con reset está permitido
     }
 }

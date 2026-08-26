@@ -100,8 +100,8 @@ packages/pmm/              exchange contracts (Foundry, Arbitrum)
 
 | Contract | Address |
 |---|---|
-| FaroRouter | `0x3D1bB51E809c3d807bCAA487de4b0E370B9fF3D3` |
-| FaroPMM | `0x8Add360E4A4A34C87989088c118Ca0cb1238c5e5` |
+| FaroRouter | `0x98DEA13e63B60b05c89aCfCAaC9ca4d529A3B1F8` |
+| FaroPMM | `0xD4B744C8d30E49dF39562E8d53f1FaCDa0402c42` |
 | Curve ARGt/USDT0 (Twin) | `0x356D349dA9ADd7Efb56a35fAB939A2c6D852f853` |
 | Pyth (USD/MXN feed) | `0xff1a0f4744e8582DF1aE09D5611b887B6a12925C` |
 

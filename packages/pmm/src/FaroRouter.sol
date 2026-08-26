@@ -23,6 +23,7 @@ contract FaroRouter is ReentrancyGuard {
     uint256 private constant USDT0_INDEX = 1;
 
     error Expired();
+    error NotOwner();
 
     modifier checkDeadline(uint256 deadline) {
         if (block.timestamp > deadline) revert Expired();
@@ -120,6 +121,12 @@ contract FaroRouter is ReentrancyGuard {
         (, uint256 usdPerMext, uint256 age) = PMM.midPrice();
         argtPerMext = (argtPerUsd * usdPerMext) / 1e18;
         oracleAge = age;
+    }
+
+    /// @notice Rescata ETH que alguien mandó directo al router. Solo el owner del PMM.
+    function sweepEth(address payable to) external {
+        if (msg.sender != PMM.owner()) revert NotOwner();
+        to.transfer(address(this).balance);
     }
 
     function _refund() internal {

@@ -59,15 +59,8 @@ library PMMMath {
     {
         if (k == 0) return V1 + DecimalMath.mulFloor(i, delta);
         if (V1 == 0) return 0;
-        uint256 sqrt;
         uint256 ki = 4 * k * i;
-        if (ki == 0) {
-            sqrt = DecimalMath.ONE;
-        } else if ((ki * delta) / ki == delta) {
-            sqrt = Math.sqrt((ki * delta) / V1 + DecimalMath.ONE2);
-        } else {
-            sqrt = Math.sqrt((ki / V1) * delta + DecimalMath.ONE2);
-        }
+        uint256 sqrt = ki == 0 ? DecimalMath.ONE : Math.sqrt(Math.mulDiv(ki, delta, V1) + DecimalMath.ONE2);
         uint256 premium = DecimalMath.divFloor(sqrt - DecimalMath.ONE, k * 2) + DecimalMath.ONE;
         return DecimalMath.mulFloor(V1, premium);
     }
@@ -88,15 +81,7 @@ library PMMMath {
             return out > V1 ? V1 : out;
         }
         if (k == DecimalMath.ONE) {
-            uint256 temp;
-            uint256 idelta = i * delta;
-            if (idelta == 0) {
-                temp = 0;
-            } else if ((idelta * V1) / idelta == V1) {
-                temp = (idelta * V1) / (V0 * V0);
-            } else {
-                temp = (((delta * V1) / V0) * i) / V0;
-            }
+            uint256 temp = Math.mulDiv(i * delta, V1, V0 * V0);
             return (V1 * temp) / (temp + DecimalMath.ONE);
         }
         uint256 part2 = ((k * V0) / V1) * V0 + i * delta; // kV0²/V1 + i·delta

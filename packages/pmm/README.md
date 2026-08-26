@@ -25,3 +25,14 @@ cast send $PMM "deposit(uint256,uint256,bool)" <wei> 0 true --private-key $OPS_P
 Operación (owner): `deposit(base, quoteRaw, reset)`, `withdraw(...)`, `resetTargets()`, `setParams(k, feeBps, maxAge, maxConfBps, maxTradeQuote)`, `pause()`. Rebalanceo manual: retirar USDT0 acumulado, conseguir MEXt, depositar con `reset = true`.
 
 Deploy actual: `deployments/arbitrum.json`.
+
+## Auditoría (agentes Pashov, 7 lentes) y arreglos aplicados
+
+Sin caminos de robo de fondos. Se corrigió todo lo señalado:
+
+1. Reembolso de ETH incondicional al final del swap (antes, con `pythUpdate` vacío el ETH quedaba en el contrato).
+2. `PMMMath`: idiomas de detección de overflow pre‑0.8 reemplazados por `Math.mulDiv` (la rama de degradación era código muerto).
+3. `setParams` acota `maxAge ≤ 10 min` y `0 < maxConfBps ≤ 500`, así el owner no puede desarmar el oráculo.
+4. Tope por operación simétrico: en `sellQuote` también se acota el valor en dólares del MEXt que sale.
+5. Inventario acreditado por delta real de `balanceOf` (tolera tokens con fee o rebasing).
+6. Pistas: las vistas `quote*` aplican los mismos guards que la ejecución; `deposit`/`withdraw` sin reset revierten si desincronizan los objetivos (`TargetsOutOfSync`); CEI (estado antes de transferir, reembolso al final); `FaroRouter.sweepEth` para ETH enviado por error.

@@ -57,6 +57,10 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
     error SlippageExceeded();
     error InsufficientInventory();
     error BadParams();
+    error TargetsOutOfSync();
+
+    uint256 public constant MAX_ORACLE_AGE = 10 minutes;
+    uint256 public constant MAX_CONF_BPS_CAP = 500;
     error TradeTooLarge();
 
     constructor(
@@ -90,9 +94,9 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         whenNotPaused
         returns (uint256 quoteOut)
     {
-        uint256 i = _freshPrice(pythUpdate);
-        PMMPricing.PMMState memory s = _state(i);
-        (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellBaseToken(s, baseIn);
+        (uint256 i, uint256 pythFee) = _freshPrice(pythUpdate);
+        uint256 received = _pull(BASE, baseIn);
+        (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellBaseToken(_state(i), received);
         if (maxTradeQuote > 0 && grossOut > maxTradeQuote) revert TradeTooLarge();
         uint256 fee = (grossOut * feeBps) / 10_000;
         uint256 netOut = grossOut - fee;
@@ -100,12 +104,12 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         quoteOut = netOut / QUOTE_SCALE;
         if (quoteOut < minQuoteOut) revert SlippageExceeded();
 
-        BASE.safeTransferFrom(msg.sender, address(this), baseIn);
-        QUOTE.safeTransfer(to, quoteOut);
-        B += baseIn;
+        B += received;
         Q -= quoteOut * QUOTE_SCALE;
         _settle(newR);
-        emit Swap(msg.sender, to, true, baseIn, quoteOut, i, fee / QUOTE_SCALE);
+        QUOTE.safeTransfer(to, quoteOut);
+        _refund(pythFee);
+        emit Swap(msg.sender, to, true, received, quoteOut, i, fee / QUOTE_SCALE);
     }
 
     /// @notice Vende `quoteIn` USDT0 (raw) y recibe MEXt.
@@ -117,20 +121,21 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         returns (uint256 baseOut)
     {
         if (maxTradeQuote > 0 && quoteIn * QUOTE_SCALE > maxTradeQuote) revert TradeTooLarge();
-        uint256 i = _freshPrice(pythUpdate);
-        PMMPricing.PMMState memory s = _state(i);
-        (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellQuoteToken(s, quoteIn * QUOTE_SCALE);
+        (uint256 i, uint256 pythFee) = _freshPrice(pythUpdate);
+        uint256 received = _pull(QUOTE, quoteIn);
+        (uint256 grossOut, PMMPricing.RState newR) = PMMPricing.sellQuoteToken(_state(i), received * QUOTE_SCALE);
         uint256 fee = (grossOut * feeBps) / 10_000;
         baseOut = grossOut - fee;
+        if (maxTradeQuote > 0 && (baseOut * i) / DecimalMath.ONE > maxTradeQuote) revert TradeTooLarge();
         if (baseOut > B) revert InsufficientInventory();
         if (baseOut < minBaseOut) revert SlippageExceeded();
 
-        QUOTE.safeTransferFrom(msg.sender, address(this), quoteIn);
-        BASE.safeTransfer(to, baseOut);
-        Q += quoteIn * QUOTE_SCALE;
+        Q += received * QUOTE_SCALE;
         B -= baseOut;
         _settle(newR);
-        emit Swap(msg.sender, to, false, quoteIn, baseOut, i, fee);
+        BASE.safeTransfer(to, baseOut);
+        _refund(pythFee);
+        emit Swap(msg.sender, to, false, received, baseOut, i, fee);
     }
 
     // ============ views (usan el último precio on-chain, para preview) ============
@@ -142,7 +147,10 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
     {
         (oraclePrice, oracleAge) = _lastPrice();
         (uint256 grossOut,) = PMMPricing.sellBaseToken(_state(oraclePrice), baseIn);
-        quoteOut = (grossOut - (grossOut * feeBps) / 10_000) / QUOTE_SCALE;
+        if (maxTradeQuote > 0 && grossOut > maxTradeQuote) revert TradeTooLarge();
+        uint256 netOut = grossOut - (grossOut * feeBps) / 10_000;
+        if (netOut > Q) revert InsufficientInventory();
+        quoteOut = netOut / QUOTE_SCALE;
     }
 
     function quoteSellQuote(uint256 quoteIn)
@@ -151,8 +159,11 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         returns (uint256 baseOut, uint256 oraclePrice, uint256 oracleAge)
     {
         (oraclePrice, oracleAge) = _lastPrice();
+        if (maxTradeQuote > 0 && quoteIn * QUOTE_SCALE > maxTradeQuote) revert TradeTooLarge();
         (uint256 grossOut,) = PMMPricing.sellQuoteToken(_state(oraclePrice), quoteIn * QUOTE_SCALE);
         baseOut = grossOut - (grossOut * feeBps) / 10_000;
+        if (maxTradeQuote > 0 && (baseOut * oraclePrice) / DecimalMath.ONE > maxTradeQuote) revert TradeTooLarge();
+        if (baseOut > B) revert InsufficientInventory();
     }
 
     /// @notice Precio medio actual del PMM (quote por base, 1e18) y el del oráculo.
@@ -173,11 +184,10 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
 
     /// @notice Deposita inventario. Con `reset` fija los objetivos al inventario resultante (R = 1).
     function deposit(uint256 baseAmount, uint256 quoteAmountRaw, bool reset) external onlyOwner {
-        if (baseAmount > 0) BASE.safeTransferFrom(msg.sender, address(this), baseAmount);
-        if (quoteAmountRaw > 0) QUOTE.safeTransferFrom(msg.sender, address(this), quoteAmountRaw);
-        B += baseAmount;
-        Q += quoteAmountRaw * QUOTE_SCALE;
+        if (baseAmount > 0) B += _pull(BASE, baseAmount);
+        if (quoteAmountRaw > 0) Q += _pull(QUOTE, quoteAmountRaw) * QUOTE_SCALE;
         if (reset) _resetTargets();
+        else _checkTargets();
         emit Inventory(B, Q, B0, Q0, R);
     }
 
@@ -191,6 +201,7 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
             QUOTE.safeTransfer(to, quoteAmountRaw);
         }
         if (reset) _resetTargets();
+        else _checkTargets();
         emit Inventory(B, Q, B0, Q0, R);
     }
 
@@ -243,7 +254,9 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
     function _setParams(uint256 k_, uint256 feeBps_, uint256 maxAge_, uint256 maxConfBps_, uint256 maxTradeQuote_)
         internal
     {
-        if (k_ == 0 || k_ > DecimalMath.ONE || feeBps_ > 1_000 || maxAge_ == 0) revert BadParams();
+        if (k_ == 0 || k_ > DecimalMath.ONE || feeBps_ > 1_000) revert BadParams();
+        if (maxAge_ == 0 || maxAge_ > MAX_ORACLE_AGE) revert BadParams();
+        if (maxConfBps_ == 0 || maxConfBps_ > MAX_CONF_BPS_CAP) revert BadParams();
         k = k_;
         feeBps = feeBps_;
         maxAge = maxAge_;
@@ -252,20 +265,38 @@ contract FaroPMM is Ownable2Step, Pausable, ReentrancyGuard {
         emit Params(k_, feeBps_, maxAge_, maxConfBps_, maxTradeQuote_);
     }
 
-    /// @dev Publica el update de Pyth (si viene), cobra el fee y devuelve el sobrante; exige precio fresco.
-    function _freshPrice(bytes[] calldata pythUpdate) internal returns (uint256 i) {
+    /// @dev Publica el update de Pyth (si viene) y exige precio fresco. Devuelve el fee pagado; el sobrante lo reembolsa el swap al final.
+    function _freshPrice(bytes[] calldata pythUpdate) internal returns (uint256 i, uint256 fee) {
         if (pythUpdate.length > 0) {
-            uint256 fee = PYTH.getUpdateFee(pythUpdate);
+            fee = PYTH.getUpdateFee(pythUpdate);
             require(msg.value >= fee, "PYTH_FEE");
             PYTH.updatePriceFeeds{value: fee}(pythUpdate);
-            uint256 refund = msg.value - fee;
-            if (refund > 0) {
-                (bool ok,) = msg.sender.call{value: refund}("");
-                require(ok, "REFUND");
-            }
         }
         PythStructs.Price memory p = PYTH.getPriceNoOlderThan(FEED_ID, maxAge);
-        return _toQuotePerBase(p);
+        i = _toQuotePerBase(p);
+    }
+
+    /// @dev Reembolsa el ETH que sobró del fee de Pyth (siempre, haya update o no). Última interacción del swap.
+    function _refund(uint256 fee) internal {
+        uint256 refund = msg.value - fee;
+        if (refund > 0) {
+            (bool ok,) = msg.sender.call{value: refund}("");
+            require(ok, "REFUND");
+        }
+    }
+
+    /// @dev Trae `amount` del caller y devuelve lo que realmente entró (tokens con fee o rebasing).
+    function _pull(IERC20 token, uint256 amount) internal returns (uint256 received) {
+        uint256 before = token.balanceOf(address(this));
+        token.safeTransferFrom(msg.sender, address(this), amount);
+        received = token.balanceOf(address(this)) - before;
+    }
+
+    /// @dev Un cambio de inventario sin reset no puede dejar B < B0 en R>1 ni Q < Q0 en R<1 (adjustedTarget haría underflow).
+    function _checkTargets() internal view {
+        if (R == PMMPricing.RState.ABOVE_ONE && Q < Q0) revert TargetsOutOfSync();
+        if (R == PMMPricing.RState.BELOW_ONE && B < B0) revert TargetsOutOfSync();
+        if (R == PMMPricing.RState.ONE && (B != B0 || Q != Q0)) revert TargetsOutOfSync();
     }
 
     function _lastPrice() internal view returns (uint256 i, uint256 age) {

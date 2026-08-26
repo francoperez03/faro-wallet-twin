@@ -6,6 +6,8 @@ import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {FaroPMM} from "../src/FaroPMM.sol";
 import {FaroRouter} from "../src/FaroRouter.sol";
 import {ICurveTwocrypto} from "../src/interfaces/ICurveTwocrypto.sol";
+import {IPyth} from "@pythnetwork/pyth-sdk-solidity/IPyth.sol";
+import {PythStructs} from "@pythnetwork/pyth-sdk-solidity/PythStructs.sol";
 
 /// forge test --match-contract Fork --fork-url $ARBITRUM_RPC_URL
 contract ForkTest is Test {
@@ -22,8 +24,11 @@ contract ForkTest is Test {
 
     function setUp() public {
         vm.createSelectFork(vm.envString("ARBITRUM_RPC_URL"));
-        // maxAge enorme: en el fork no podemos publicar un update firmado de Pyth, usamos el último on-chain
-        pmm = new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, 0.05e18, 40, 365 days * 10, 100, 0, owner);
+        // En el fork no podemos publicar un update firmado de Pyth: mockeamos la lectura "fresca" con el último precio on-chain.
+        PythStructs.Price memory last = IPyth(PYTH).getPriceUnsafe(FEED);
+        last.publishTime = block.timestamp;
+        vm.mockCall(PYTH, abi.encodeWithSelector(IPyth.getPriceNoOlderThan.selector, FEED, uint256(600)), abi.encode(last));
+        pmm = new FaroPMM(MEXT, USDT0, 6, PYTH, FEED, 0.05e18, 40, 600, 100, 0, owner);
         router = new FaroRouter(CURVE, payable(address(pmm)));
         deal(MEXT, owner, 50_000e18);
         vm.startPrank(owner);
