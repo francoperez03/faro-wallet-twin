@@ -1,7 +1,0 @@
-[package]
-name = "poseidon2_vector"
-type = "bin"
-authors = [""]
-
-[dependencies]
-commitment_lib = { path = "/Users/francoperez/repos/job/Sobre/sobrecito/circuits/commitment_lib" }

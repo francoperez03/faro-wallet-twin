@@ -1,8 +1,0 @@
-# forge build: artefactos de compilación regenerables con `forge build`.
-out/
-cache/
-
-# broadcast/ SÍ se versiona: es la provenance del deploy (tx hashes, addresses,
-# receipts) que alimenta deployments.json y no contiene secretos. La clave de
-# deploy va por env var (command substitution) o keystore de cast, jamás a un archivo.
-!broadcast/

@@ -47,3 +47,9 @@ circuits-mini/**/target/
 
 # logs de playwright-mcp
 .playwright-mcp/
+
+# Foundry (packages/pmm)
+packages/pmm/out/
+packages/pmm/cache/
+packages/pmm/broadcast/**/dry-run/
+packages/pmm/.env
