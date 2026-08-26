@@ -133,6 +133,9 @@ export function SwapPanel({
         args: [amountIn, quote.data.minOut, deadline, update],
         value: fee,
         chainId: CHAIN_ID,
+        // Arbitrum suma el calldata de L1 al gas intrínseco y el update de Pyth pesa varios KB:
+        // el estimador del wallet queda corto ("intrinsic gas too low"). Límite explícito; solo se cobra lo usado.
+        gas: BigInt(2_000_000),
       });
       setStage("pending");
       const receipt = await client.waitForTransactionReceipt({ hash });
