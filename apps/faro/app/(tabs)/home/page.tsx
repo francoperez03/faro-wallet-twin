@@ -412,6 +412,7 @@ export default function HomePage() {
                         <SwapPanel
                           walletAddress={walletAddress}
                           token={token}
+                          onInvert={setToken}
                           onDone={() => void refetch()}
                         />
                       </TabsContent>

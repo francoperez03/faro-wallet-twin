@@ -11,7 +11,7 @@ import {
 import { getPublicClient } from "wagmi/actions";
 import { erc20Abi, formatUnits, maxUint256, parseUnits } from "viem";
 import { toast } from "sonner";
-import { ChevronDown } from "lucide-react";
+import { ArrowDownUp, ChevronDown } from "lucide-react";
 import {
   CHAIN_IDS,
   SWAP,
@@ -55,11 +55,14 @@ const BIG_NUM = "min-w-0 flex-1 font-serif text-[28px] leading-none tabular-nums
 export function SwapPanel({
   walletAddress,
   token,
+  onInvert,
   onDone,
 }: {
   walletAddress: `0x${string}` | undefined;
   /** Moneda seleccionada en la home: siempre es el origen del cambio. */
   token: TokenKey;
+  /** Invertir el sentido: la home pasa a la moneda destino como seleccionada. */
+  onInvert?: (token: SwapToken) => void;
   onDone?: () => void;
 }) {
   if (!isSwapToken(token)) {
@@ -69,16 +72,25 @@ export function SwapPanel({
       </p>
     );
   }
-  return <Swap walletAddress={walletAddress} from={token} onDone={onDone} />;
+  return (
+    <Swap
+      walletAddress={walletAddress}
+      from={token}
+      onInvert={onInvert}
+      onDone={onDone}
+    />
+  );
 }
 
 function Swap({
   walletAddress,
   from,
+  onInvert,
   onDone,
 }: {
   walletAddress: `0x${string}` | undefined;
   from: SwapToken;
+  onInvert?: (token: SwapToken) => void;
   onDone?: () => void;
 }) {
   const config = useConfig();
@@ -237,6 +249,21 @@ function Swap({
         </label>
         {amountError && (
           <p className="-mt-1 text-sm text-destructive">{amountError}</p>
+        )}
+
+        {onInvert && (
+          <button
+            type="button"
+            aria-label="Invertir el sentido del cambio"
+            disabled={busy}
+            onClick={() => {
+              setAmount("");
+              onInvert(to);
+            }}
+            className="relative z-10 -my-[26px] mx-auto flex size-10 items-center justify-center rounded-full border border-border bg-card text-muted-foreground transition-colors hover:border-gold hover:text-gold disabled:opacity-50"
+          >
+            <ArrowDownUp className="size-4" aria-hidden="true" />
+          </button>
         )}
 
         <div className={BIG_CARD}>
