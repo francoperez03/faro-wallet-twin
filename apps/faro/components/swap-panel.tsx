@@ -27,7 +27,7 @@ const CHAIN_ID = CHAIN_IDS[SWAP.chain];
 
 const fmt = (v: bigint, decimals: number, max = 2) =>
   Number(formatUnits(v, decimals)).toLocaleString("es-AR", {
-    minimumFractionDigits: 2,
+    minimumFractionDigits: Math.min(2, max),
     maximumFractionDigits: max,
   });
 
