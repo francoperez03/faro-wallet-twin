@@ -9,7 +9,7 @@ import {
   useWriteContract,
 } from "wagmi";
 import { getPublicClient } from "wagmi/actions";
-import { erc20Abi, formatUnits, parseUnits } from "viem";
+import { erc20Abi, formatUnits, maxUint256, parseUnits } from "viem";
 import { toast } from "sonner";
 import { ArrowLeftRight } from "lucide-react";
 import { CHAIN_IDS, SWAP, TOKENS, type SwapToken } from "@/lib/config/tokens";
@@ -110,7 +110,7 @@ export function SwapPanel({
           address: tokenIn,
           abi: erc20Abi,
           functionName: "approve",
-          args: [SWAP.router, amountIn],
+          args: [SWAP.router, maxUint256], // una sola aprobación; el router nunca retiene fondos
           chainId: CHAIN_ID,
         });
         setStage("pending");
