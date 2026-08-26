@@ -6,6 +6,7 @@ import { getPublicClient } from "wagmi/actions";
 import { CHAIN_IDS, SWAP, type SwapToken } from "@/lib/config/tokens";
 import { pmmAbi, routerAbi } from "@/lib/config/swap-abi";
 import { fetchPythPrice } from "@/lib/pyth";
+import { MOCK_SWAP, mockQuote } from "@/lib/mock-swap";
 
 export const SLIPPAGE_BPS = BigInt(50); // 0,5 %
 
@@ -27,14 +28,19 @@ export type SwapQuote = {
 };
 
 /** Cotización en vivo ARGt ↔ MEXt vía FaroRouter (Curve + PMM). `amountIn` en unidades base del token de origen. */
-export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
+export function useSwapQuote(
+  from: SwapToken,
+  amountIn: bigint | null,
+  slippageBps: bigint = SLIPPAGE_BPS,
+) {
   const config = useConfig();
   return useQuery({
-    queryKey: ["swap-quote", from, amountIn?.toString() ?? "0"],
+    queryKey: ["swap-quote", from, amountIn?.toString() ?? "0", slippageBps.toString()],
     enabled: Boolean(amountIn && amountIn > BigInt(0)),
     staleTime: 10_000,
     refetchInterval: 15_000,
     queryFn: async (): Promise<SwapQuote> => {
+      if (MOCK_SWAP && amountIn) return mockQuote(from, amountIn, slippageBps);
       const client = getPublicClient(config, {
         chainId: CHAIN_IDS[SWAP.chain],
       });
@@ -87,7 +93,7 @@ export function useSwapQuote(from: SwapToken, amountIn: bigint | null) {
           : 0;
       return {
         amountOut,
-        minOut: (amountOut * (BigInt(10_000) - SLIPPAGE_BPS)) / BigInt(10_000),
+        minOut: (amountOut * (BigInt(10_000) - slippageBps)) / BigInt(10_000),
         usdtMid,
         effectiveArgtPerMext,
         referenceArgtPerMext,

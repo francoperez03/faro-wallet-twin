@@ -411,7 +411,7 @@ export default function HomePage() {
                       <TabsContent value="cambiar">
                         <SwapPanel
                           walletAddress={walletAddress}
-                          initialFrom={token === "MEXt" ? "MEXt" : "ARGt"}
+                          token={token}
                           onDone={() => void refetch()}
                         />
                       </TabsContent>
