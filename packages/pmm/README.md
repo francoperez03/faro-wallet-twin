@@ -13,7 +13,7 @@ forge script script/Deploy.s.sol --rpc-url arbitrum --broadcast        # SEED_ME
 PMM=0x… ROUTER=0x… forge script script/Status.s.sol --rpc-url arbitrum
 ```
 
-Parámetros actuales: `k = 0,05`, fee 0,4 %, oráculo con edad máxima 60 s y confianza ≤ 0,5 %, tope de US$ 2.500 por operación (`maxTradeQuote`).
+Parámetros actuales: `k = 0,05`, fee 0,4 %, oráculo con edad máxima 5 min y confianza ≤ 0,5 %, tope de US$ 2.500 por operación (`maxTradeQuote`).
 
 Inventario objetivo recomendado: US$ 5k a 10k en MEXt (85k a 170k MEXt). Con `k = 0,05` y US$ 10k, una operación de US$ 500 paga ~0,3 % de desvío y una de US$ 1.000 ~0,5 %. Seed desde la wallet ops:
 
