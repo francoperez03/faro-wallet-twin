@@ -47,7 +47,7 @@ type Step = "home" | "rewards";
 const STEP_INDEX: Record<Step, number> = { home: 0, rewards: 1 };
 
 const TAB_TRIGGER =
-  "min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
+  "group min-h-11 flex-1 gap-1.5 rounded-md text-sm font-semibold text-muted-foreground data-[state=active]:bg-gold-dim data-[state=active]:text-gold";
 
 export default function HomePage() {
   const { ready, authenticated, user, login } = usePrivy();
@@ -372,19 +372,22 @@ export default function HomePage() {
                     >
                       <TabsList className="h-11 w-full gap-1 rounded-lg border border-border bg-background p-1">
                         <TabsTrigger value="enviar" className={TAB_TRIGGER}>
-                          <ArrowUpRight className="size-4" aria-hidden="true" />
+                          <ArrowUpRight
+                            className="size-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                            aria-hidden="true"
+                          />
                           Enviar
                         </TabsTrigger>
                         <TabsTrigger value="recibir" className={TAB_TRIGGER}>
                           <ArrowDownLeft
-                            className="size-4"
+                            className="size-4 transition-transform duration-200 group-hover:translate-y-0.5 group-hover:-translate-x-0.5"
                             aria-hidden="true"
                           />
                           Recibir
                         </TabsTrigger>
                         <TabsTrigger value="cambiar" className={TAB_TRIGGER}>
                           <ArrowLeftRight
-                            className="size-4"
+                            className="size-4 transition-transform duration-200 group-hover:rotate-180"
                             aria-hidden="true"
                           />
                           Cambiar
